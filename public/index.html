@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WB 版本管理器</title>
+    <link rel="stylesheet" href="/styles.css" />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%232f6bff'/%3E%3Ctext x='32' y='43' font-size='28' font-family='Arial' font-weight='bold' fill='white' text-anchor='middle'%3EWB%3C/text%3E%3C/svg%3E" />
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div class="brand">
+          <div class="brand-mark">WB</div>
+          <div class="brand-text">
+            <h1>版本管理器</h1>
+            <p>WorkBuddy · WorkBuddy AI</p>
+          </div>
+        </div>
+        <div class="topbar-right">
+          <div class="source-pill" id="sourcePill">
+            <span class="dot" id="sourceDot"></span>
+            <span id="sourceText">官方源连接中…</span>
+          </div>
+          <button class="btn btn-ghost" id="refreshBtn">
+            <svg viewBox="0 0 24 24" class="ico"><path d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6" /></svg>
+            检查更新
+          </button>
+          <button class="icon-btn" id="settingsBtn" title="设置">
+            <svg viewBox="0 0 24 24" class="ico"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9v.09a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="refresh-bar" id="refreshBar"><div class="refresh-bar-fill" id="refreshFill"></div></div>
+    </header>
+
+    <main class="page">
+      <section class="hero">
+        <div class="hero-copy">
+          <h2>把版本钉在你信任的那一版</h2>
+          <p>自动识别本机安装、锁定当前版本、随时回退。安装包只替换程序文件，工作区、任务与技能数据原样保留。</p>
+        </div>
+        <div class="hero-stats" id="heroStats"></div>
+      </section>
+
+      <section class="app-grid" id="appGrid"></section>
+      <section id="driftArea"></section>
+
+      <section class="panel block-panel">
+        <div class="panel-head">
+          <div class="panel-title">
+            <h3>自动更新拦截 <span id="blockBadge"></span></h3>
+            <p>客户端把更新包下载到用户目录，下次启动静默安装。拦截会把更新包移入隔离区，并用同名占位目录阻止再次写入——安装目录一个字节都不改。</p>
+          </div>
+          <div class="panel-tools" id="blockActions"></div>
+        </div>
+        <div class="block-body" id="blockBody"></div>
+      </section>
+
+      <section class="panel versions-panel">
+        <div class="panel-head">
+          <div class="panel-title">
+            <h3>版本清单</h3>
+            <p id="versionsSub">正在读取…</p>
+          </div>
+          <div class="panel-tools">
+            <div class="segmented" id="appSwitch"></div>
+          </div>
+        </div>
+
+        <div class="toolbar">
+          <label class="search">
+            <svg viewBox="0 0 24 24" class="ico"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.2-3.2"/></svg>
+            <input id="searchInput" placeholder="搜索版本号，例如 5.9 或 5.11.3" />
+          </label>
+          <select id="seriesSelect" class="select"></select>
+          <div class="chips" id="filterChips">
+            <button class="chip active" data-filter="all">全部</button>
+            <button class="chip" data-filter="notes">有更新说明</button>
+            <button class="chip" data-filter="downloaded">已下载</button>
+          </div>
+          <div class="toolbar-right">
+            <button class="btn btn-ghost" id="exportAllBtn">
+              <svg viewBox="0 0 24 24" class="ico"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 21h16"/></svg>
+              导出链接
+            </button>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th class="col-check"><input type="checkbox" id="checkAll" /></th>
+                <th class="col-version">版本</th>
+                <th class="col-date">发布日期</th>
+                <th class="col-size">Windows 包</th>
+                <th class="col-state">状态</th>
+                <th class="col-actions">操作</th>
+              </tr>
+            </thead>
+            <tbody id="versionRows"></tbody>
+          </table>
+          <div class="empty" id="versionsEmpty" hidden>
+            <div class="empty-icon">⌕</div>
+            <p>没有匹配的版本</p>
+          </div>
+        </div>
+
+        <div class="selection-bar" id="selectionBar" hidden>
+          <span class="sel-count" id="selCount">已选 0 个版本</span>
+          <div class="sel-actions">
+            <button class="btn btn-sm" data-sel="copy">复制链接</button>
+            <button class="btn btn-sm" data-sel="export">导出</button>
+            <button class="btn btn-sm" data-sel="download">批量下载</button>
+            <button class="btn btn-sm btn-primary" data-sel="lock">锁定到此版本</button>
+            <button class="icon-btn sm" data-sel="clear" title="清空选择">✕</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel downloads-panel">
+        <div class="panel-head">
+          <div class="panel-title">
+            <h3>下载与本地安装包</h3>
+            <p>下载后可直接安装或回退，安装包保存在工具目录，不占用系统盘缓存</p>
+          </div>
+          <button class="btn btn-ghost btn-sm" id="openStoreBtn">打开目录</button>
+        </div>
+        <div id="downloadsArea"></div>
+      </section>
+
+      <footer class="foot">
+        <span>数据来源：WorkBuddy 官方历史版本页 / 更新日志 / 更新通道</span>
+        <span id="catalogStamp"></span>
+      </footer>
+    </main>
+
+    <div class="drawer-mask" id="drawerMask" hidden></div>
+    <aside class="drawer" id="drawer" hidden>
+      <div class="drawer-head">
+        <div>
+          <div class="drawer-eyebrow" id="drawerEyebrow">版本详情</div>
+          <h3 id="drawerTitle">5.11.3</h3>
+          <p id="drawerMeta"></p>
+        </div>
+        <button class="icon-btn" id="drawerClose">✕</button>
+      </div>
+      <div class="drawer-body" id="drawerBody"></div>
+      <div class="drawer-foot" id="drawerFoot"></div>
+    </aside>
+
+    <div class="modal-mask" id="modalMask" hidden>
+      <div class="modal" id="modal">
+        <div class="modal-head">
+          <h3 id="modalTitle">提示</h3>
+          <button class="icon-btn" id="modalClose">✕</button>
+        </div>
+        <div class="modal-body" id="modalBody"></div>
+        <div class="modal-foot" id="modalFoot"></div>
+      </div>
+    </div>
+
+    <div class="toasts" id="toasts"></div>
+
+    <script src="/app.js"></script>
+  </body>
+</html>

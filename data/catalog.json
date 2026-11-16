@@ -1,0 +1,2625 @@
+{
+  "generatedAt": "2026-11-16T15:44:46.016Z",
+  "sources": {
+    "history": "https://www.workbuddy.cn/docs/workbuddy/Download-History",
+    "changelog": "https://www.workbuddy.cn/docs/workbuddy/Changelog",
+    "updateFeed": "https://copilot.tencent.com/v2/update?platform=workbuddy-win32-x64-user"
+  },
+  "latest": {
+    "version": "5.11.3",
+    "build": "5.11.3.43806934",
+    "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-5.11.3.43806934-ecace0f7.exe",
+    "sha256": "2fd40059eea2f9a2d641c675a66f2476d71b49d9eb32f19db8c318768133b56b",
+    "publishedAt": "2026-11-13T00:35:34.000Z"
+  },
+  "releases": [
+    {
+      "version": "5.11.3",
+      "build": "5.11.3.43806934",
+      "date": "2026-11-15",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://acc-1258344699.cos.ap-guangzhou.myqcloud.com/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-5.11.3.43806934-ecace0f7.dmg",
+          "sizeText": "358.0 MB"
+        },
+        "darwin-x64": {
+          "url": "https://acc-1258344699.cos.ap-guangzhou.myqcloud.com/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-5.11.3.43806934-ecace0f7.dmg",
+          "sizeText": "389.6 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://acc-1258344699.cos.ap-guangzhou.myqcloud.com/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-5.11.3.43806934-ecace0f7.exe",
+          "sizeText": "438.5 MB"
+        }
+      },
+      "notes": [
+        "修复任务运行会话顶栏编辑时，分组下拉缺少新建分组与选择本地文件夹选项的问题",
+        "修复置顶任务通过右键菜单移入分组时与拖拽行为不一致，取消置顶后未直接落到目标分组的问题",
+        "修复拖拽任务时侧栏偶现空白置顶区的问题",
+        "修复定时任务侧栏入口与聚合页未读红点点击后未及时消失的问题",
+        "修复本地历史会话在特定情况下从侧栏任务列表中丢失的问题",
+        "修复设置独立窗口在浅色模式下错误显示为深色的问题，以及无外观权限账号被云端外观配置强制切换至深色的问题",
+        "修复运行期间切换至新上架皮肤后主窗口回退为浅色的问题",
+        "修复 CE 会话缺少项目资源注册导致项目相关 MCP 工具和技能目录不可用的问题",
+        "修复 Buddy 应用请求未走正确域名端点的问题"
+      ],
+      "notesUrl": "https://www.workbuddy.cn/docs/workbuddy/Changelog-5.11.3",
+      "notesTitle": "5.11.3 版本发布 🚀（2026-11-15） ​"
+    },
+    {
+      "version": "5.11.2",
+      "build": "5.11.2.43614525",
+      "date": "2026-11-10",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://acc-1258344699.cos.ap-guangzhou.myqcloud.com/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-5.11.2.43614525-fe9da600.dmg",
+          "sizeText": "360.9 MB"
+        },
+        "darwin-x64": {
+          "url": "https://acc-1258344699.cos.ap-guangzhou.myqcloud.com/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-5.11.2.43614525-fe9da600.dmg",
+          "sizeText": "389.6 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://acc-1258344699.cos.ap-guangzhou.myqcloud.com/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-5.11.2.43614525-fe9da600.exe",
+          "sizeText": "438.5 MB"
+        }
+      },
+      "notes": [
+        "新增侧栏「置顶 / 最近 / 分组」独立分区展示，支持按类型筛选",
+        "新增任务置顶交互优化，支持置顶任务管理与排序",
+        "新增新建会话时打开本地文件夹入口，会话归属更灵活",
+        "新增桌面端与移动端侧栏数据实时同步（置顶、最近及分组）",
+        "新增 Extension Service 支持声明继承 WorkBuddy 代理",
+        "优化任务执行时即时展示上一轮产物卡片",
+        "优化侧栏分组展开/收起动画，消除重启首屏闪烁",
+        "优化分组内会话按更新时间排序，涵盖云端项目/助理/机器人",
+        "优化轮次结束后及时释放沙箱，降低峰值占用",
+        "优化连接器只读连接不再抢先取消授权",
+        "优化云端图片识别",
+        "优化定时任务卡片去重",
+        "优化技能资源文件变更走独立窗口处理",
+        "优化沙箱 Office 预览空闲时停止保活轮询",
+        "修复侧栏闪烁及未读点显示异常的问题",
+        "修复产物卡片偶现消失的问题",
+        "修复云端任务被误判为失败的问题",
+        "修复部分场景下沙箱未释放的问题",
+        "修复思考设置不生效的问题",
+        "修复技能分享失败的问题",
+        "修复套件删除弹窗无法正常关闭的问题"
+      ],
+      "notesUrl": "https://www.workbuddy.cn/docs/workbuddy/Changelog-5.11.2",
+      "notesTitle": "5.11.2 版本发布 🚀（2026-11-10） ​"
+    },
+    {
+      "version": "5.11.1",
+      "build": "5.11.1.42981686",
+      "date": "2026-11-03",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-5.11.1.42981686-212b937c.dmg",
+          "sizeText": "361.0 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-5.11.1.42981686-212b937c.dmg",
+          "sizeText": "389.7 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-5.11.1.42981686-212b937c.exe",
+          "sizeText": "438.6 MB"
+        }
+      },
+      "notes": [
+        "优化云端任务离屏恢复能力",
+        "优化输入框工具栏稳定性",
+        "优化云电脑连接器体验",
+        "优化企业微信授权流程",
+        "优化定时任务表现",
+        "优化安装速度",
+        "修复内容丢失问题",
+        "修复会话卡死问题",
+        "修复页面崩溃问题",
+        "修复产物预览异常",
+        "修复技能分享问题",
+        "修复海外版显示问题"
+      ],
+      "notesUrl": "https://www.workbuddy.cn/docs/workbuddy/Changelog-5.11.1",
+      "notesTitle": "5.11.1 版本发布 🚀（2026-11-03） ​"
+    },
+    {
+      "version": "5.11.0",
+      "build": "5.11.0.42821195",
+      "date": "2026-11-01",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-5.11.0.42821195-c07f4023.dmg",
+          "sizeText": "361.0 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-5.11.0.42821195-c07f4023.dmg",
+          "sizeText": "389.5 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-5.11.0.42821195-c07f4023.exe",
+          "sizeText": "438.6 MB"
+        }
+      },
+      "notes": [
+        "首页全新改版，下线办公/开发/设计入口，统一任务栏、菜单与顶栏",
+        "定时任务全面升级，支持立即运行、编辑、重命名、删除与启动/暂停",
+        "独立文件浏览器支持标签页拖出独立窗口、右侧栏预览",
+        "频道 IM 新增组件化消息卡片与自定义表情包，消息可跨端同步，频道与专家支持一键分享",
+        "创意设计接入图片编辑，图片视频产物统一在画布打开并默认入库",
+        "优化上传、浏览器操作与对话推荐等体验，并修复云电脑、频道、资料库等若干问题"
+      ],
+      "notesUrl": "https://www.workbuddy.cn/docs/workbuddy/Changelog-5.11.0",
+      "notesTitle": "5.11.0 版本发布 🚀（2026-11-03）[灰度中] ​"
+    },
+    {
+      "version": "5.9.3",
+      "build": "5.9.3.42398134",
+      "date": "2026-10-27",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://acc-1258344699.cos.ap-guangzhou.myqcloud.com/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-5.9.3.42398134-d4692421.dmg",
+          "sizeText": "356.1 MB"
+        },
+        "darwin-x64": {
+          "url": "https://acc-1258344699.cos.ap-guangzhou.myqcloud.com/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-5.9.3.42398134-d4692421.dmg",
+          "sizeText": "384.5 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://acc-1258344699.cos.ap-guangzhou.myqcloud.com/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-5.9.3.42398134-d4692421.exe",
+          "sizeText": "429.3 MB"
+        }
+      },
+      "notes": [
+        "修复从其他设备迁移数据时仅能全量导入、无法按分类选择且超大数据无法迁移的问题，导入上限调整为 100GB",
+        "修复 Windows 升级时因安装目录校验导致升级检查失败的问题",
+        "修复重启后历史会话使用的模型被误回退到其他模型的问题",
+        "修复打开已有长会话任务时会话区偶现崩溃、提示「出错了」的问题",
+        "修复 Windows 升级后 sandbox 初始化失败导致所有工具执行报错的问题",
+        "修复 Windows 静默升级后新进程未能继承完整环境变量、导致部分功能异常的问题"
+      ],
+      "notesUrl": "https://www.workbuddy.cn/docs/workbuddy/Changelog-5.9.3",
+      "notesTitle": "5.9.3 版本发布 🚀（2026-10-27） ​"
+    },
+    {
+      "version": "5.9.2",
+      "build": "5.9.2.42136757",
+      "date": "2026-10-26",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://acc-1258344699.cos.ap-guangzhou.myqcloud.com/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-5.9.2.42136757-0b5051be.dmg",
+          "sizeText": "356.2 MB"
+        },
+        "darwin-x64": {
+          "url": "https://acc-1258344699.cos.ap-guangzhou.myqcloud.com/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-5.9.2.42136757-0b5051be.dmg",
+          "sizeText": "384.5 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://acc-1258344699.cos.ap-guangzhou.myqcloud.com/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-5.9.2.42136757-0b5051be.exe",
+          "sizeText": "429.4 MB"
+        }
+      },
+      "notes": [
+        "优化语音识别体验，终稿直接回填输入框，不再经过额外润色处理",
+        "优化语音快捷键，恢复组合快捷键支持，并与双绑定设置保持同步",
+        "修复欢迎页办公 / 开发模式的路由在版本切换后未正确生效的问题",
+        "修复本地文件保存与另存为功能异常的问题",
+        "修复云会话停止生成后按回车键误触发消息发送的问题",
+        "修复无产物时 MCP 应用面板被空白新标签页意外替换的问题",
+        "修复深色模式下专家卡片付费标签、BuddyOne 推荐卡片背景不可辨认的问题"
+      ],
+      "notesUrl": "https://www.workbuddy.cn/docs/workbuddy/Changelog-5.9.2",
+      "notesTitle": "5.9.2 版本发布 🚀（2026-10-26） ​"
+    },
+    {
+      "version": "5.9.1",
+      "build": "5.9.1.41982132",
+      "date": "2026-10-22",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://acc-1258344699.cos.ap-guangzhou.myqcloud.com/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-5.9.1.41982132-31477875.dmg",
+          "sizeText": "356.1 MB"
+        },
+        "darwin-x64": {
+          "url": "https://acc-1258344699.cos.ap-guangzhou.myqcloud.com/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-5.9.1.41982132-31477875.dmg",
+          "sizeText": "384.5 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://acc-1258344699.cos.ap-guangzhou.myqcloud.com/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-5.9.1.41982132-31477875.exe",
+          "sizeText": "429.4 MB"
+        }
+      },
+      "notes": [
+        "新增从同账号其他电脑导入任务、空间和定时任务，可在设置中一键迁移",
+        "新增 Buddy One 会员购买，开通后排队提示同步更新",
+        "新增 Gmail 部分授权与补充授权，授权完成后自动返回客户端",
+        "新增 macOS 本地会话上传 HEIC 图片",
+        "优化视频生成等高积分工具的调用确认，完全访问模式下也会先征得同意",
+        "优化云端记忆，可记住项目相关内容",
+        "优化 PPT 生成的素材核对，减少内容与配图不符",
+        "优化本地服务链接与 HTML 预览中的新窗口，改在内置浏览器和新页签中打开",
+        "优化 QQ 浏览器扩展安装，直接跳转 QQ 浏览器商店",
+        "优化发起新对话时自动移除上一轮的积分耗尽提示",
+        "优化历史会话回放，不再自动弹出产物",
+        "优化对话流窄屏、输入框、通讯录与个人卡片的样式",
+        "修复专家团任务完成后次日或重启后显示「运行中」「已中断」、子成员状态错乱的问题",
+        "修复历史任务顺序错乱的问题",
+        "修复部分用户缺少 PPT 技能，以及 Windows 上设计风格弹窗打不开的问题",
+        "修复 Markdown 预览编辑时，外部或 AI 的修改被旧内容覆盖的问题",
+        "修复偶现消息发送失败、技能和连接器管理页空白的问题",
+        "修复工作区授信误判导致无法执行命令，以及浏览器操作、电脑操作技能偶现不可用的问题",
+        "修复技能带 v 前缀版本号时检测不到更新的问题",
+        "修复 Buddy One 绑定后资料库授权不同步、推荐卡按钮不恢复、连接器未自动续连的问题",
+        "修复非企业微信身份点「去授权」误弹企业微信授权窗的问题",
+        "修复项目任务运行中输入文字时回复区域抖动，以及云任务预览误显示分享按钮的问题",
+        "修复记忆开关加载前误显示为开启的问题",
+        "修复灵感案例中专家团未下架却显示已下架的问题",
+        "修复公众号信源搜索丢失关键词的问题",
+        "修复网页端企业微信登录后首页入口不显示的问题",
+        "修复独立窗口网页失效时整个窗口变成错误页，以及 macOS 14/15 独立文件浏览器 Dock 图标偏大的问题",
+        "修复手动安装和 macOS 更新后残留旧安装文件的问题"
+      ],
+      "notesUrl": "https://www.workbuddy.cn/docs/workbuddy/Changelog-5.9.1",
+      "notesTitle": "5.9.1 版本发布 🚀（2026-10-22） ​"
+    },
+    {
+      "version": "5.9.0",
+      "build": "5.9.0.41809846",
+      "date": "2026-10-20",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://acc-1258344699.cos.ap-guangzhou.myqcloud.com/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-5.9.0.41809846-0f0c2199.dmg",
+          "sizeText": "355.4 MB"
+        },
+        "darwin-x64": {
+          "url": "https://acc-1258344699.cos.ap-guangzhou.myqcloud.com/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-5.9.0.41809846-0f0c2199.dmg",
+          "sizeText": "383.8 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://acc-1258344699.cos.ap-guangzhou.myqcloud.com/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-5.9.0.41809846-0f0c2199.exe",
+          "sizeText": "428.8 MB"
+        }
+      },
+      "notes": [
+        "新增独立文件浏览器 HTML 在新窗口打开",
+        "新增模型选择器配置自定义模型入口",
+        "新增购买成功后 Buddy One 绑定引导",
+        "新增海外版消息中心及运营位",
+        "优化技能分享落地页与弹窗体验",
+        "优化浏览器操作工具标题展示",
+        "优化连接器失败与模型繁忙时的提示",
+        "优化 Buddy 应用窗场景模板，避免覆盖已输入内容",
+        "优化 AI native 助理右侧栏加载速度",
+        "修复独立文件浏览器中特殊字符路径和 Office 宏格式文件无法打开的问题",
+        "修复连接器 Token 失效无修复入口、无效 Key 误提示已连接、授权拒绝后加载卡住的问题",
+        "修复频道 IM 删除消息卡片一直显示「同步中」、输入框右键无粘贴菜单的问题",
+        "修复资料库按文档类型筛选不显示 docx、频道资料库导出白屏的问题",
+        "修复专家搜索优先级错误、专家团任务中断及成员丢失的问题",
+        "修复助理、对话、定时任务、待办、日历等模块的若干问题"
+      ],
+      "notesUrl": "https://www.workbuddy.cn/docs/workbuddy/Changelog-5.9.0",
+      "notesTitle": "5.9.0 版本发布 🚀（2026-10-20） ​"
+    },
+    {
+      "version": "5.8.3",
+      "build": "5.8.3.41334564",
+      "date": "2026-10-19",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://acc-1258344699.cos.ap-guangzhou.myqcloud.com/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-5.8.3.41334564-db0e9b51.dmg",
+          "sizeText": "349.9 MB"
+        },
+        "darwin-x64": {
+          "url": "https://acc-1258344699.cos.ap-guangzhou.myqcloud.com/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-5.8.3.41334564-db0e9b51.dmg",
+          "sizeText": "378.2 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://acc-1258344699.cos.ap-guangzhou.myqcloud.com/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-5.8.3.41334564-db0e9b51.exe",
+          "sizeText": "421.6 MB"
+        }
+      },
+      "notes": [
+        "修复内置运行时随版本切换时同步弹出闪屏的问题",
+        "修复账号刷新串号导致会话错乱，以及企微助理会话结束后入口默认回到本地助理的问题",
+        "修复 5.8.3 中语音功能因被异常覆盖导致不可用的问题",
+        "优化本地沙箱内存占用，修复长期运行后内存膨胀导致的卡死",
+        "优化企业代理与系统证书环境下的连接稳定性，修复切换代理后连接异常"
+      ],
+      "notesUrl": "https://www.workbuddy.cn/docs/workbuddy/Changelog-5.8.3",
+      "notesTitle": "5.8.3 版本发布 🚀（2026-10-19） ​"
+    },
+    {
+      "version": "5.8.2",
+      "build": "5.8.2.41111488",
+      "date": "2026-10-15",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://acc-1258344699.cos.ap-guangzhou.myqcloud.com/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-5.8.2.41111488-b8f6c953.dmg",
+          "sizeText": "349.9 MB"
+        },
+        "darwin-x64": {
+          "url": "https://acc-1258344699.cos.ap-guangzhou.myqcloud.com/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-5.8.2.41111488-b8f6c953.dmg",
+          "sizeText": "378.2 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://acc-1258344699.cos.ap-guangzhou.myqcloud.com/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-5.8.2.41111488-b8f6c953.exe",
+          "sizeText": "420.7 MB"
+        }
+      },
+      "notes": [
+        "修复部分历史会话因消息异常或内容过大而无法打开的问题",
+        "修复企业微信智能机器人生成文件后，回复卡在思考中、文件未发回对话的问题",
+        "修复产物栏数量跳变，以及网页端产物预览遮挡下载入口的问题",
+        "修复旗舰版侧边栏菜单未按管理后台配置展示的问题",
+        "修复语音输入连续点击时识别异常的问题"
+      ],
+      "notesUrl": "https://www.workbuddy.cn/docs/workbuddy/Changelog-5.8.2",
+      "notesTitle": "5.8.2 版本发布 🚀（2026-10-16） ​"
+    },
+    {
+      "version": "5.8.1",
+      "build": "5.8.1.41036298",
+      "date": "2026-10-11",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://acc-1258344699.cos.ap-guangzhou.myqcloud.com/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-5.8.1.41036298-ecf9d414.dmg",
+          "sizeText": "350.0 MB"
+        },
+        "darwin-x64": {
+          "url": "https://acc-1258344699.cos.ap-guangzhou.myqcloud.com/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-5.8.1.41036298-ecf9d414.dmg",
+          "sizeText": "378.2 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://acc-1258344699.cos.ap-guangzhou.myqcloud.com/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-5.8.1.41036298-ecf9d414.exe",
+          "sizeText": "420.7 MB"
+        }
+      },
+      "notes": [
+        "安全中心的文件备份支持设置单文件大小上限，填 0 即可不限制文件大小",
+        "开始语音输入时自动聚焦输入框，发送消息后自动结束语音输入",
+        "企业微信助理的回复会跟随你的交流语言，引导弹窗中「前往登录」可直接唤起企业微信客户端",
+        "侧栏菜单按企业管理后台配置的顺序展示",
+        "生成大量文件时产物栏计数更新更快，不支持上传到 ima、乐享的文件类型会提前置灰",
+        "修复腾讯文档已连接却提示未连接，以及个人企业微信账号打开文档时被要求重新登录的问题",
+        "修复重新进入助理会话时，企业微信授权确认反复弹出的问题",
+        "修复通过系统右键、IM 附件或企业微信机器人打开 Office 文件时预览空白的问题",
+        "修复独立文件窗口关闭后仍持续占用内存，以及退出应用时偶发崩溃的问题",
+        "修复部分任务连接失败后一直显示「思考中」的问题",
+        "修复仅预览 Markdown 文件时内容被自动改写，以及超大表格显示错乱的问题",
+        "修复编辑历史消息后连按 Enter 重复发送，以及运行中追加的图片重复显示的问题",
+        "修复项目会话生成文件后立即分享会中断的问题",
+        "修复工作目录名称以空格结尾时历史会话无法打开的问题",
+        "修复沙箱自动审批误拦截用户明确要求的操作，以及手机端偶发显示电脑离线的问题",
+        "修复扫码连接微信客服号后无法发起消息，以及记忆删除后重新导入不显示的问题",
+        "修复连接器图标出现白底或交错显示、切换主题时背景闪烁，以及 Windows 下灵感案例详情按钮无法点击的问题"
+      ],
+      "notesUrl": "https://www.workbuddy.cn/docs/workbuddy/Changelog-5.8.1",
+      "notesTitle": "5.8.1 版本发布 🚀（2026-10-11） ​"
+    },
+    {
+      "version": "5.8.0",
+      "build": "5.8.0.40866637",
+      "date": "2026-10-09",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://acc-1258344699.cos.ap-guangzhou.myqcloud.com/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-5.8.0.40866637-2162a562.dmg",
+          "sizeText": "348.9 MB"
+        },
+        "darwin-x64": {
+          "url": "https://acc-1258344699.cos.ap-guangzhou.myqcloud.com/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-5.8.0.40866637-2162a562.dmg",
+          "sizeText": "377.3 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://acc-1258344699.cos.ap-guangzhou.myqcloud.com/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-5.8.0.40866637-2162a562.exe",
+          "sizeText": "419.8 MB"
+        }
+      },
+      "notes": [
+        "新增 Buddy 应用内嵌挂件，可从侧栏「更多」以独立窗口打开，并将页面内容带入新任务",
+        "新增独立文件浏览器窗口与独立图标，本地文件可与主窗口分开预览和 AI 编辑",
+        "增强资料库能力，支持助手搜索和上传文件、上传压缩包，并将内容用于后续检索与处理",
+        "新增设置搜索，未登录时也可打开设置并配置网络代理",
+        "新增模型繁忙度展示，选择模型时可更直观地了解当前负载",
+        "新增对话后的下一步问题推荐，支持换一条并一键填入输入框",
+        "新增自定义模型域名风险提醒，使用非官方中转服务前可了解数据安全风险",
+        "新增任务失败分层提醒，可在置顶、任务和工作空间列表中快速发现失败任务",
+        "优化 Markdown、CSV 和 HTML 产物工具栏，统一操作入口与展示样式",
+        "优化技能云端同步和千级技能管理，减少重复技能、列表卡顿及下载安装等待",
+        "优化资料库打开、退出和文档预览的资源占用，减少长时间卡顿与内存持续增长",
+        "优化长会话加载和流式展示，重新打开复杂会话时可继续查看更早内容",
+        "优化连接器搜索、排序、授权和重连，切换语言或网络恢复后状态更稳定",
+        "优化定时任务通知和运行记录，通知可直达对应结果，成功、失败和产物状态更准确",
+        "优化 Browser Use 的表单状态识别及 Edge 点击、拖拽速度",
+        "修复回退会话时图片或文本产物无法识别、产物卡片丢失或旧内容重新出现的问题",
+        "修复网页应用预览白屏、小程序创建或发布失败，以及分享入口打开本地地址的问题",
+        "修复文件预览吞掉正文或代码中 * 字符，导致复制内容失真的问题",
+        "修复从搜索进入历史任务后工作空间归属跳变、搜索面板未及时关闭的问题"
+      ],
+      "notesUrl": "https://www.workbuddy.cn/docs/workbuddy/Changelog-5.8.0",
+      "notesTitle": "5.8.0 版本发布 🚀（2026-10-09） ​"
+    },
+    {
+      "version": "5.7.7",
+      "build": "5.7.7.40774747",
+      "date": "2026-10-09",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://acc-1258344699.cos.ap-guangzhou.myqcloud.com/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-5.7.7.40774747-2e8619da.dmg",
+          "sizeText": "340.8 MB"
+        },
+        "darwin-x64": {
+          "url": "https://acc-1258344699.cos.ap-guangzhou.myqcloud.com/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-5.7.7.40774747-2e8619da.dmg",
+          "sizeText": "368.4 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://acc-1258344699.cos.ap-guangzhou.myqcloud.com/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-5.7.7.40774747-2e8619da.exe",
+          "sizeText": "415.7 MB"
+        }
+      },
+      "notes": [
+        "优化成长计划体验问题"
+      ],
+      "notesUrl": "https://www.workbuddy.cn/docs/workbuddy/Changelog-5.7.7",
+      "notesTitle": "5.7.7 版本发布 🚀（2026-10-08） ​"
+    },
+    {
+      "version": "5.7.6",
+      "build": "5.7.6.40409493",
+      "date": "2026-10-04",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-5.7.6.40409493-306add2a.dmg",
+          "sizeText": "340.6 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-5.7.6.40409493-306add2a.dmg",
+          "sizeText": "368.2 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-5.7.6.40409493-306add2a.exe",
+          "sizeText": "415.4 MB"
+        }
+      },
+      "notes": [
+        "海外版新增 Gmail 连接器，完成授权后可直接读取和发送邮件",
+        "修复图片生成高积分提醒误触发或漏触发的问题",
+        "修复偶现新建本地任务失败的问题",
+        "修复资料库中打开 PPTX 文件在线预览较慢、预览区空白的问题",
+        "修复偶现云助理发送消息后无回复，以及本地和云助理历史消息加载缓慢的问题",
+        "修复小程序开发产物被自动清理、预览资源无法加载的问题"
+      ],
+      "notesUrl": "https://www.workbuddy.cn/docs/workbuddy/Changelog-5.7.6",
+      "notesTitle": "5.7.6 版本发布 🚀（2026-10-04） ​"
+    },
+    {
+      "version": "5.7.5",
+      "build": "5.7.5.40325363",
+      "date": "2026-10-03",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://acc-1258344699.cos.ap-guangzhou.myqcloud.com/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-5.7.5.40325363-0290fdc3.dmg",
+          "sizeText": "340.6 MB"
+        },
+        "darwin-x64": {
+          "url": "https://acc-1258344699.cos.ap-guangzhou.myqcloud.com/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-5.7.5.40325363-0290fdc3.dmg",
+          "sizeText": "368.2 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://acc-1258344699.cos.ap-guangzhou.myqcloud.com/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-5.7.5.40325363-0290fdc3.exe",
+          "sizeText": "415.4 MB"
+        }
+      },
+      "notes": [
+        "新增定时任务汇总页，同一任务的历次运行按时间线展示，可集中查看执行结果和产物",
+        "新增定时任务产物系统通知，点击提醒即可打开对应产物",
+        "新增 Outlook 连接器（海外版），授权后可处理邮件、日程和联系人",
+        "优化通知提示音，默认无音效，仍可在设置中选择其他提示音",
+        "优化桌面端安装包体积，下载和安装更轻便",
+        "优化首次进入对话的等待体验，准备过程更清晰",
+        "优化首页和任务列表加载，减少启动时侧栏闪烁、内容跳变",
+        "优化桌面端任务通知，移动端能更快收到提醒",
+        "优化图片产物的微信分享，接收方可直接以图片形式查看",
+        "修复部分情况下客户端启动失败、无法登录或发起对话的问题",
+        "修复长会话历史记录显示不全，以及取消任务后继续对话丢失上下文的问题",
+        "修复 Windows 开机自启设置失败，以及回退版本后反复准备环境的问题",
+        "修复断网后消息中心无法查看已加载消息的问题",
+        "修复独立任务窗口内购买积分、升级套餐点击后无响应的问题",
+        "修复设置中无法清空自定义助理名称的问题"
+      ],
+      "notesUrl": "https://www.workbuddy.cn/docs/workbuddy/Changelog-5.7.5",
+      "notesTitle": "5.7.5 版本发布 🚀（2026-10-03） ​"
+    },
+    {
+      "version": "5.7.3",
+      "build": "5.7.3.40038958",
+      "date": "2026-09-30",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://acc-1258344699.cos.ap-guangzhou.myqcloud.com/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-5.7.3.40038958-aa9f13d9.dmg",
+          "sizeText": "539.6 MB"
+        },
+        "darwin-x64": {
+          "url": "https://acc-1258344699.cos.ap-guangzhou.myqcloud.com/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-5.7.3.40038958-aa9f13d9.dmg",
+          "sizeText": "555.5 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://acc-1258344699.cos.ap-guangzhou.myqcloud.com/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-5.7.3.40038958-aa9f13d9.exe",
+          "sizeText": "525.7 MB"
+        }
+      },
+      "notes": [
+        "优化首页任务推荐的加载速度，减少首次展示时的内容跳动",
+        "修复 Windows 上从模板创建自动化任务失败的问题",
+        "修复 Windows 更新安装期间提前打开应用导致报错的问题",
+        "修复展开空间任务列表时内容延迟出现、界面跳动的问题"
+      ],
+      "notesUrl": "https://www.workbuddy.cn/docs/workbuddy/Changelog-5.7.3",
+      "notesTitle": "5.7.3 版本发布 🚀（2026-09-30） ​"
+    },
+    {
+      "version": "5.7.2",
+      "build": "5.7.2.39910104",
+      "date": "2026-09-29",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://acc-1258344699.cos.ap-guangzhou.myqcloud.com/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-5.7.2.39910104-8681c146.dmg",
+          "sizeText": "539.7 MB"
+        },
+        "darwin-x64": {
+          "url": "https://acc-1258344699.cos.ap-guangzhou.myqcloud.com/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-5.7.2.39910104-8681c146.dmg",
+          "sizeText": "555.5 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://acc-1258344699.cos.ap-guangzhou.myqcloud.com/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-5.7.2.39910104-8681c146.exe",
+          "sizeText": "525.8 MB"
+        }
+      },
+      "notes": [
+        "修复企业下发的助理在「企业智能体」列表中消失的问题，现在可以正常找到并使用",
+        "修复侧栏「助理」入口消失，以及「助理」「项目」入口位置不正确的问题"
+      ],
+      "notesUrl": "https://www.workbuddy.cn/docs/workbuddy/Changelog-5.7.2",
+      "notesTitle": "5.7.2 版本发布 🚀（2026-09-29） ​"
+    },
+    {
+      "version": "5.7.0",
+      "build": "5.7.0.39813687",
+      "date": "2026-09-27",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-5.7.0.39813687-695dec86.dmg",
+          "sizeText": "539.7 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-5.7.0.39813687-695dec86.dmg",
+          "sizeText": "555.5 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-5.7.0.39813687-695dec86.exe",
+          "sizeText": "525.7 MB"
+        }
+      },
+      "notes": [
+        "定时任务页面焕新，集中查看任务模板、配置与运行记录，任务失败时更容易找到原因",
+        "新增全局搜索，可查找资料库内容和聊天记录",
+        "首次打开包含开发配置的工作区时增加信任确认，保护本地文件与运行环境",
+        "新增桌面任务通知授权引导，任务完成后可在电脑和关联移动端收到提醒",
+        "新增插件查看与卸载、技能搜索与安装，管理会话可用能力更方便",
+        "右侧面板新标签页可直接查看和打开对话产物",
+        "本地 Markdown 支持查找替换，Markdown 和 HTML 预览支持缩放，HTML 产物支持页面查找",
+        "支持从 WorkBuddy 在 CodeBuddy 中打开工作空间",
+        "开发者可分享已公开发布的专家、应用、技能等资产，用户打开分享链接即可查看详情",
+        "优化对话前的技能推荐，常用技能和连接器更容易发现",
+        "优化专家与技能页面，展示开发者信息，专家列表加载更快",
+        "优化启动和会话切换时的等待体验，减少界面卡顿",
+        "修复部分情况下新任务发送后一直等待、没有回复的问题",
+        "修复历史会话恢复卡住、重复刷新和长对话回复显示不全的问题",
+        "修复 Windows 上部分会话无法继续、本地模型加载超时导致任务失败的问题",
+        "修复项目任务的 HTML 产物预览白屏，以及本地文档预览无法正常关闭的问题",
+        "修复网页端归档任务列表为空、定时任务运行状态显示不准确的问题"
+      ],
+      "notesUrl": "https://www.workbuddy.cn/docs/workbuddy/Changelog-5.7.0",
+      "notesTitle": "5.7.0 版本发布 🚀（2026-09-28） ​"
+    },
+    {
+      "version": "5.6.2",
+      "build": "5.6.2.39298511",
+      "date": "2026-09-21",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-5.6.2.39298511-37a65c0b.dmg",
+          "sizeText": "508.5 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-5.6.2.39298511-37a65c0b.dmg",
+          "sizeText": "523.2 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-5.6.2.39298511-37a65c0b.exe",
+          "sizeText": "506.3 MB"
+        }
+      },
+      "notes": [
+        "优化文档预览窗口的打开、保存、主题与关闭，未登录也可预览 PPT",
+        "优化连接器授权与开关：授权完成后才显示图标，关闭后对话中不再残留可用工具",
+        "优化技能安装、更新检测与闲置提醒，不同来源的同名技能不再误标已安装，套件内技能不再被误关",
+        "减少对话中反复确认专家身份的追问",
+        "修复项目新建本地任务长时间停在准备中，以及删除会话后本地助理打不开的问题",
+        "修复超长本地会话「查看更多」无法翻到更早记录的问题",
+        "修复历史会话专家身份丢失、任务结束后仍显示处理中、问答误显示「已跳过」的问题",
+        "修复新建任务后工作空间选择丢失，以及输入框模型名称空白的问题",
+        "修复推荐安装卡片超时后关不掉，以及新建会话后仍停留在分享勾选状态的问题",
+        "修复从分享页返回需点两次才能继续对话的问题",
+        "修复企业微信 / 微信转发聊天记录识别失败、卡片一直显示「准备中」的问题",
+        "修复网页产物预览无法播放内嵌音频，以及对话中搜索文件结果为空的问题",
+        "修复连接器授权成功后一直显示「连接中」，以及解除授权后无法重新连接的问题",
+        "修复定时任务企业微信通知延迟或漏发、没有运行记录却反复执行，以及分享链接中途变化的问题",
+        "修复快捷键重设后必须重启才生效的问题",
+        "修复购买积分弹窗无法打开、取消发布的应用从列表消失，以及腾讯文档创建 PPT 失败的问题",
+        "修复对话没有回复或服务异常后会话卡住，以及网页端偶发退出登录的问题"
+      ],
+      "notesUrl": "https://www.workbuddy.cn/docs/workbuddy/Changelog-5.6.2",
+      "notesTitle": "5.6.2 版本发布 🚀（2026-09-21） ​"
+    },
+    {
+      "version": "5.6.1",
+      "build": "5.6.1.39229070",
+      "date": "2026-09-20",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-5.6.1.39229070-fb76bf97.dmg",
+          "sizeText": "508.5 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-5.6.1.39229070-fb76bf97.dmg",
+          "sizeText": "523.2 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-5.6.1.39229070-fb76bf97.exe",
+          "sizeText": "506.3 MB"
+        }
+      },
+      "notes": [],
+      "notesUrl": "",
+      "notesTitle": ""
+    },
+    {
+      "version": "5.6.0",
+      "build": "5.6.0.39055568",
+      "date": "2026-09-19",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-5.6.0.39055568-11f59a42.dmg",
+          "sizeText": "508.5 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-5.6.0.39055568-11f59a42.dmg",
+          "sizeText": "523.2 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-5.6.0.39055568-11f59a42.exe",
+          "sizeText": "506.3 MB"
+        }
+      },
+      "notes": [
+        "新增设置「应用管理」，可查看已授权的第三方应用与 Buddy 应用，并支持一键撤销授权",
+        "新增会话消息引用输入，选中他人消息即可作为上下文继续追问",
+        "新增巴西葡萄牙语与印尼语界面，切换后重启依旧保持",
+        "恢复自定义 MCP 直接编辑 mcp.json 的能力，可整份配置维护并即时生效",
+        "新增闲置能力提醒卡片，长期未使用的插件和技能可一键关闭",
+        "Browser Use 兼容 Edge 加载项商店和 QQ 浏览器",
+        "完善微信 macOS 系统 Share Sheet 转发到 WorkBuddy 的流程，高频分享给出频控提示",
+        "新增语音输入实时反馈并延长最长录音时长，语音输入过程中不再打断手动编辑",
+        "提升对话历史首帧速度，长会话和复杂任务续聊更流畅",
+        "优化 Markdown 预览与编辑，切换 Tab 不再丢失编辑内容，Mermaid 等图表滚动更顺畅",
+        "优化连接器管理，卡片描述、图标、连接状态和市场目录更新更稳定",
+        "优化 MCP 服务管理、授权面板与探活重试，网络恢复后可自动重连",
+        "优化云端任务产物栏与消息顺序，产物随对话出现，多轮消息不再乱序",
+        "优化跨设备会话标题、模型、置顶顺序同步",
+        "优化电脑操作、浏览器操作、Bash 命令等工具在对话中的展示形态",
+        "优化购买积分体验，账户与订阅入口整合，支付到账变化更直观",
+        "优化专家中心分类展示、专家分享 / 导入与深链跳转",
+        "优化企业腾讯文档、乐享企业版面板首次打开速度",
+        "统一退出登录的二次确认弹窗、危险按钮和加载态，跨标签页登出实时同步",
+        "优化流式回复中「已处理 X 秒」耗时对齐真实整秒，减少无效刷新",
+        "优化窗口缩放边缘不再闪出异色底色，首页输入框悬停提示词模板时不再抖动",
+        "修复企业腾讯文档首次预览停在登录页、连接器授权完成后误跳系统浏览器的问题",
+        "修复冷启动短窗口内新建会话缺失插件工具的问题",
+        "修复企业下发含 %USERPROFILE% 环境变量的安全路径规则不生效的问题",
+        "修复切换账号后连接器目录不刷新，个人版切司内看不到内网连接器的问题",
+        "修复上一轮长命令仍在执行时，新消息误中断上一轮任务的问题",
+        "修复连接器已连接却调不到工具、已关闭却显示为开启导致会话无法发送的问题",
+        "修复插件套件启停后当前会话不生效、状态停留在「部分完成」的问题",
+        "修复流式 Markdown 标记异常、重复文本，以及慢历史加载被误判为空会话的问题",
+        "修复腾讯文档 skill 拿不到票据、PPT 编辑报错的问题",
+        "修复 WorkBuddy 频繁自动掉登录态的问题",
+        "修复本地助理多轮回复只剩「已完成」空壳、首条消息发送失败的问题",
+        "修复内置插件 MCP（微信支付、表格助理等）在桌面会话里连不上的问题",
+        "修复 Windows 上表格助手、文档流水线等子代理从工具描述中随机消失的问题",
+        "修复弱网对话恢复失败、同一会话消息队列被新输入越过的问题",
+        "修复自动化任务卡死不触发、任务莫名结束、休眠期间调度不准的问题",
+        "修复分享页助手署名异常、多产物分享缺产物、会话分享失败的问题",
+        "修复海外版自动化推送标题显示中文、帮助文档跳转与订阅入口错乱的问题",
+        "修复设计模式下选项浮层遮挡、深色主题适配、设计会话历史缺失的问题",
+        "修复项目任务对话滚动卡顿、待办和会话切换偶发白屏的问题",
+        "修复腾讯乐享企业版面板白屏、连接器授权卡在等待状态的问题"
+      ],
+      "notesUrl": "https://www.workbuddy.cn/docs/workbuddy/Changelog-5.6.0",
+      "notesTitle": "5.6.0 版本发布 🚀（2026-09-19） ​"
+    },
+    {
+      "version": "5.5.6",
+      "build": "5.5.6.38337834",
+      "date": "2026-09-10",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-5.5.6.38337834-5f969292.dmg",
+          "sizeText": "509.5 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-5.5.6.38337834-5f969292.dmg",
+          "sizeText": "523.2 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-5.5.6.38337834-5f969292.exe",
+          "sizeText": "507.5 MB"
+        }
+      },
+      "notes": [
+        "优化自动化任务重试，失败后可在当前会话中继续，避免创建重复的任务会话",
+        "修复自动化任务重试成功后运行历史状态不准确、切换任务后旧错误再次出现的问题",
+        "优化自动化任务错误提示，不再展示无意义的内部错误码和失效操作指引",
+        "提升插件推荐的主动性与准确度，可根据任务需要更恰当地推荐连接器、专家或专家团队"
+      ],
+      "notesUrl": "https://www.workbuddy.cn/docs/workbuddy/Changelog-5.5.6",
+      "notesTitle": "5.5.6 版本发布 🚀（2026-09-10） ​"
+    },
+    {
+      "version": "5.5.5",
+      "build": "5.5.5.38252327",
+      "date": "2026-09-09",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-5.5.5.38252327-65d4085d.dmg",
+          "sizeText": "509.5 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-5.5.5.38252327-65d4085d.dmg",
+          "sizeText": "523.3 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-5.5.5.38252327-65d4085d.exe",
+          "sizeText": "507.5 MB"
+        }
+      },
+      "notes": [
+        "新增创意设计能力，支持图片生成、视频生成和品牌设计等场景",
+        "发起任务时可直接添加资料库中的文档或空间作为参考内容",
+        "后台任务支持查看详情和终端输出，并可随时取消运行",
+        "「数据管理—应用」支持直接发布或取消发布应用，并优化多个应用及历史应用的管理体验",
+        "从企业微信转发聊天记录后，可自动读取其中的文档、微盘文件、日程、待办、会议和智能纪要",
+        "优化包含复杂 Mermaid 图表的 Markdown 预览，滚动和加载更加流畅",
+        "改善超长会话的流式显示，减少消息区域抖动和闪烁",
+        "提升电脑休眠唤醒后的恢复能力，减少余额加载、退出登录或会话操作长期卡住的问题",
+        "修复部分本地 PPT 和特殊 HTML 内容预览白屏的问题"
+      ],
+      "notesUrl": "https://www.workbuddy.cn/docs/workbuddy/Changelog-5.5.5",
+      "notesTitle": "5.5.5 版本发布 🚀（2026-09-10） ​"
+    },
+    {
+      "version": "5.5.4",
+      "build": "5.5.4.38151288",
+      "date": "2026-09-08",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-5.5.4.38151288-1ca4889a.dmg",
+          "sizeText": "489.8 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-5.5.4.38151288-1ca4889a.dmg",
+          "sizeText": "505.5 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-5.5.4.38151288-1ca4889a.exe",
+          "sizeText": "462.9 MB"
+        }
+      },
+      "notes": [
+        "「允许锁屏运行」新增关闭、熄屏后继续运行、保持屏幕常亮三种模式",
+        "客户端将「自动化」统一更名为更直观的「定时任务」",
+        "模型的上下文窗口档位可分别记忆，新建会话或重启后继续沿用上次选择",
+        "修复登录凭证过期后界面仍显示已登录、发送消息却提示服务异常的问题",
+        "修复本地任务首次提问偶发卡在「正在连接 MCP 服务…」的问题",
+        "修复超长本地会话点击「查看更多」无法加载更早提问的问题",
+        "修复未选择工作空间新建任务时，侧栏短暂出现日期文件夹的问题",
+        "修复移动端任务产物中混入过程文件的问题"
+      ],
+      "notesUrl": "https://www.workbuddy.cn/docs/workbuddy/Changelog-5.5.4",
+      "notesTitle": "5.5.4 版本发布 🚀（2026-09-08） ​"
+    },
+    {
+      "version": "5.5.3",
+      "build": "5.5.3.37748631",
+      "date": "2026-09-03",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-5.5.3.37748631-104760a2.dmg",
+          "sizeText": "489.8 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-5.5.3.37748631-104760a2.dmg",
+          "sizeText": "505.5 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-5.5.3.37748631-104760a2.exe",
+          "sizeText": "462.9 MB"
+        }
+      },
+      "notes": [
+        "本地 Office 文件预览支持更大文件，Word 和表格最高 100MB，演示文稿最高 500MB",
+        "优化桌面端与移动端的模型列表一致性，避免自定义模型与同名内置模型互相覆盖或丢失",
+        "提升 Kling V3 文生视频和图生视频的参数兼容性，支持 720P、1080P 输出",
+        "修复企业微信群聊中 @机器人后持续「思考中」、无法回复的问题",
+        "修复消息已处理后仍无故继续运行的问题，减少重复续写和额外请求",
+        "修复 Windows 盘符根目录下、工作空间外的文本和 Markdown 产物显示「暂无数据」的问题"
+      ],
+      "notesUrl": "https://www.workbuddy.cn/docs/workbuddy/Changelog-5.5.3",
+      "notesTitle": "5.5.3 版本发布 🚀（2026-09-04） ​"
+    },
+    {
+      "version": "5.5.0",
+      "build": "5.5.0.37485696",
+      "date": "2026-09-01",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-5.5.0.37485696-b1b70268.dmg",
+          "sizeText": "488.8 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-5.5.0.37485696-b1b70268.dmg",
+          "sizeText": "504.7 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-5.5.0.37485696-b1b70268.exe",
+          "sizeText": "462.2 MB"
+        }
+      },
+      "notes": [
+        "新增行业 Buddy 应用，可按场景提供专属首页、专家、技能和连接器，进入应用后可直接发起更贴合行业需求的任务",
+        "支持通过 macOS 和 Windows 系统分享入口，将微信聊天记录发送到 WorkBuddy，并优化转发内容预览",
+        "新增图片处理能力，支持去文字或水印、图片修复、增强、美颜和透明背景抠图",
+        "增强腾讯文档编辑能力，支持更多内容读取、写入和文档操作场景",
+        "提升桌面端冷启动、快速问答及斜杠命令面板的响应速度，减少打开应用和开始提问时的等待",
+        "优化内置浏览器多标签切换和后台资源占用，低配置设备使用更流畅",
+        "隔离行业 Buddy 应用与通用版的输入框草稿，切换应用时不再互相覆盖内容",
+        "修复升级后首次启动可能长时间白屏，以及 Windows 安装或卸载时弹出黑色终端窗口的问题",
+        "修复企业腾讯文档首次预览停留在登录页，以及连接器授权失效后无法重新授权的问题",
+        "修复编辑后重新发送时内容错位、旧回复恢复，或发送失败后输入内容丢失的问题"
+      ],
+      "notesUrl": "https://www.workbuddy.cn/docs/workbuddy/Changelog-5.5.0",
+      "notesTitle": "5.5.0 版本发布 🚀（2026-09-01） ​"
+    },
+    {
+      "version": "5.4.7",
+      "build": "5.4.7.37521366",
+      "date": "2026-09-01",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-5.4.7.37521366-b148bd1d.dmg",
+          "sizeText": "475.2 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-5.4.7.37521366-b148bd1d.dmg",
+          "sizeText": "490.6 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-5.4.7.37521366-b148bd1d.exe",
+          "sizeText": "449.1 MB"
+        }
+      },
+      "notes": [
+        "新增「订阅和用量」设置页，可查看套餐概览、分类积分和资源包明细，并在应用内购买积分、管理自动续费",
+        "优化积分展示与刷新，购买后无需刷新整页即可查看最新余额，体验版套餐的基础积分显示更准确",
+        "修复快速、均衡、极致三档模型无法发送图片的问题",
+        "修复 Windows 下部分会话首次发送消息后无响应或失败的问题"
+      ],
+      "notesUrl": "https://www.workbuddy.cn/docs/workbuddy/Changelog-5.4.7",
+      "notesTitle": "5.4.7 版本发布 🚀（2026-09-01） ​"
+    },
+    {
+      "version": "5.4.6",
+      "build": "5.4.6.40749855",
+      "date": "2026-10-08",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-5.4.6.40749855-7242d089.dmg",
+          "sizeText": "475.2 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-5.4.6.40749855-7242d089.dmg",
+          "sizeText": "490.6 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-5.4.6.40749855-7242d089.exe",
+          "sizeText": "449.1 MB"
+        }
+      },
+      "notes": [],
+      "notesUrl": "",
+      "notesTitle": ""
+    },
+    {
+      "version": "5.4.4",
+      "build": "5.4.4.37194709",
+      "date": "2026-08-28",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-5.4.4.37194709-675393f7.dmg",
+          "sizeText": "474.8 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-5.4.4.37194709-675393f7.dmg",
+          "sizeText": "490.2 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-5.4.4.37194709-675393f7.exe",
+          "sizeText": "449.0 MB"
+        }
+      },
+      "notes": [
+        "新增专家链接直达能力，可从活动链接进入指定专家并自动带入引导语",
+        "提升专家和专家团启动稳定性，修复启动卡住、身份或版本错配，以及「做同款」时名称、头像异常的问题",
+        "修复本地助理回复结束后只显示「已完成」、新建对话误复用旧会话的问题",
+        "优化超长对话加载，减少历史内容过多导致的卡顿和加载失败",
+        "优化产物区展示与分享，保留最终交付文件、隐藏中间文件，并避免按消息片段分享时遗漏产物",
+        "优化自定义 MCP 配置，支持中文及大写服务名，并修复已连接服务工具列表为空的问题",
+        "修复关闭技能后仍可搜索、连接器状态异常变化，以及关闭专家后自动恢复的问题",
+        "提升移动端连接电脑的稳定性，改善弱网、休眠唤醒和网络切换后的同步与重连体验",
+        "优化任务权限处理，拒绝单步权限时仅跳过当前步骤，执行中切换能力不再中断当前回复",
+        "提升 PPT 和表格生成稳定性，修复部分设备无法生成、公式重算结果不准确等问题"
+      ],
+      "notesUrl": "https://www.workbuddy.cn/docs/workbuddy/Changelog-5.4.4",
+      "notesTitle": "5.4.4 版本发布 🚀（2026-08-28） ​"
+    },
+    {
+      "version": "5.4.3",
+      "build": "5.4.3.36976807",
+      "date": "2026-08-25",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-5.4.3.36976807-463818d3.dmg",
+          "sizeText": "476.4 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-5.4.3.36976807-463818d3.dmg",
+          "sizeText": "490.7 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-5.4.3.36976807-463818d3.exe",
+          "sizeText": "448.8 MB"
+        }
+      },
+      "notes": [
+        "修复升级后已置顶的任务和会话丢失的问题",
+        "提升专家团会话稳定性，修复首次发起无响应、连接超时及重开后无法继续协作的问题",
+        "优化自动化任务体验，支持搜索并选择专家团，减少自定义 MCP 确认卡住及任务中断后重复补跑的问题",
+        "修复超长会话压缩后无法继续发送消息，以及翻页查看历史时消息或产物不完整的问题",
+        "优化产物分享体验，补齐分享入口、微信唤起和本地文件快捷操作，并改进分享开关与超时提示",
+        "提升连接器和 MCP 稳定性，修复断网、取消授权、自定义授权及插件或专家能力加载异常",
+        "修复 HTML 产物删除后展示原始错误页的问题，改为显示清晰的空状态",
+        "修复使用中文输入法重命名资料库时，确认候选词会误提交名称的问题",
+        "优化设计类会话续聊速度，减少继续追问时的消息等待",
+        "修复新建会话流式回复缺失或多条消息顺序错乱的问题",
+        "修复桌面端 Office 文件因系统防火墙限制而无法预览的问题",
+        "修复网页端任务完成后无法继续追问，以及会话恢复后 Max 模式失效的问题"
+      ],
+      "notesUrl": "https://www.workbuddy.cn/docs/workbuddy/Changelog-5.4.3",
+      "notesTitle": "5.4.3 版本发布 🚀（2026-08-26） ​"
+    },
+    {
+      "version": "5.4.2",
+      "build": "5.4.2.36902088",
+      "date": "2026-08-24",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-5.4.2.36902088-9f41f5d8.dmg",
+          "sizeText": "476.4 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-5.4.2.36902088-9f41f5d8.dmg",
+          "sizeText": "490.6 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-5.4.2.36902088-9f41f5d8.exe",
+          "sizeText": "448.6 MB"
+        }
+      },
+      "notes": [
+        "提升桌面端长时间运行稳定性，减少后台运行引起的界面卡顿与系统资源占用"
+      ],
+      "notesUrl": "https://www.workbuddy.cn/docs/workbuddy/Changelog-5.4.2",
+      "notesTitle": "5.4.2 版本发布 🚀（2026-08-24） ​"
+    },
+    {
+      "version": "5.4.1",
+      "build": "5.4.1.36711347",
+      "date": "2026-08-22",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-5.4.1.36711347-2f17e4b0.dmg",
+          "sizeText": "476.4 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-5.4.1.36711347-2f17e4b0.dmg",
+          "sizeText": "490.6 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-5.4.1.36711347-2f17e4b0.exe",
+          "sizeText": "448.5 MB"
+        }
+      },
+      "notes": [
+        "提升多轮对话稳定性，修复取消后无法继续发送、切换模型或专家时任务中断等问题",
+        "优化专家使用体验，修复专家链接无法召唤、专家改名后启动旧版本及历史署名丢失的问题",
+        "提升连接器授权与开关稳定性，修复授权失败后状态卡住、反复跳转授权页或开关延迟的问题",
+        "优化资料库与腾讯文档使用流程，待办中的资料库链接可展示为文档卡片，上传后可自动启用连接器",
+        "优化任务列表与历史会话，归档任务可完整加载，未读状态、会话分类和链接跳转更准确",
+        "优化输入框与消息展示，切换场景时保留已输入内容，复制链接不再丢失原地址",
+        "优化工作区权限处理，无访问权限时提前引导授权，并减少同类权限重复弹窗",
+        "提升移动端连接电脑的同步稳定性，修复附件、图片、重复消息及上传超时等问题",
+        "优化自动化任务的默认权限、工作空间展示和会话定位，运行记录与任务状态更清晰",
+        "提升流式对话和产物加载性能，减少长回复期间的界面卡顿",
+        "修复表格新增行和图表预览异常，跨端查看结果更一致"
+      ],
+      "notesUrl": "https://www.workbuddy.cn/docs/workbuddy/Changelog-5.4.1",
+      "notesTitle": "5.4.1 版本发布 🚀（2026-08-23） ​"
+    },
+    {
+      "version": "5.4.0",
+      "build": "5.4.0.36524209",
+      "date": "2026-08-22",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-5.4.0.36524209-986e1c43.dmg",
+          "sizeText": "475.9 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-5.4.0.36524209-986e1c43.dmg",
+          "sizeText": "490.3 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-5.4.0.36524209-986e1c43.exe",
+          "sizeText": "448.4 MB"
+        }
+      },
+      "notes": [
+        "支持创建 Worktree 任务，在同一工作区并行处理多个开发任务，代码改动互不干扰",
+        "新增代码开发模式下的 Git 分支展示与安全切换，并提供独立本地终端和后台命令运行面板",
+        "新增全新系统设置页、客户端自检工具和系统通知，环境排查与待确认任务处理更便捷",
+        "新增 3D 模型生成、创意设计 PPT 模板和「媒体运营」场景，并支持本地 PPT AI 编辑撤销与重做",
+        "优化输入体验，支持拖拽添加文件、将粘贴的长文本收起为标签，以及通过微信聊天记录发起对话",
+        "增强腾讯文档与资料库能力，支持更多内容加入会话，并可通过「一键做同款」快速复刻网页",
+        "优化专家、工作空间和任务管理，支持最近使用专家搜索、工作空间重命名及任务右键操作",
+        "增强模型选择，清晰展示会员权益档位，并支持为复杂任务选择更高推理强度和上下文长度",
+        "新增自动化任务每月多日期执行周期，定时安排更灵活",
+        "提升启动、建连、历史加载和会话切换速度，长对话浏览及多任务切换更流畅",
+        "优化产物分享和长耗时 MCP 工具执行，减少分享等待及工具被提前中断",
+        "修复输入草稿丢失、上下文压缩消息错序、账号或连接器切换后信息未刷新，以及部分文件无法预览的问题"
+      ],
+      "notesUrl": "https://www.workbuddy.cn/docs/workbuddy/Changelog-5.4.0",
+      "notesTitle": "5.4.0 版本发布 🚀（2026-08-20） ​"
+    },
+    {
+      "version": "5.3.14",
+      "build": "5.3.14.36279234",
+      "date": "2026-08-22",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-5.3.14.36279234-825709d4.dmg",
+          "sizeText": "419.4 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-5.3.14.36279234-825709d4.dmg",
+          "sizeText": "449.7 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-5.3.14.36279234-825709d4.exe",
+          "sizeText": "395.9 MB"
+        }
+      },
+      "notes": [
+        "新增 Markdown AI 编辑快捷键提示，支持 Enter 直接发送、Cmd+Enter 换行",
+        "优化长期记忆加载与本地助理变量恢复，新建和恢复对话更稳定",
+        "优化自动化任务高峰期调度，减少集中触发和误判错过执行",
+        "优化灵感案例访问和做同款流程，提升资源打开、分享口令和覆盖确认体验",
+        "优化并行灵感任务页面性能，减少任务切换卡顿和历史任务白屏",
+        "修复多个任务同时提问时回复内容串话的问题",
+        "修复技能名称为纯数字时新建会话失败的问题",
+        "修复粘贴腾讯文档链接后点击「去授权」无响应的问题",
+        "修复文件分享持续失败的问题",
+        "修复思考过程代码块重叠显示的问题",
+        "修复海外版提示词增强、历史日期和关于页跳转异常的问题",
+        "修复子 Agent 沙箱任务可能永久等待的问题",
+        "修复 Wedata 图表卡片无法正常渲染的问题",
+        "修复元宝搜索入口异常隐藏的问题"
+      ],
+      "notesUrl": "https://www.workbuddy.cn/docs/workbuddy/Changelog-5.3.14",
+      "notesTitle": "5.3.14 版本发布 🚀（2026-08-17） ​"
+    },
+    {
+      "version": "5.3.13",
+      "build": "5.3.13.35923969",
+      "date": "2026-08-22",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-5.3.13.35923969-20fd9da5.dmg",
+          "sizeText": "419.5 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-5.3.13.35923969-20fd9da5.dmg",
+          "sizeText": "449.8 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-5.3.13.35923969-20fd9da5.exe",
+          "sizeText": "395.9 MB"
+        }
+      },
+      "notes": [],
+      "notesUrl": "",
+      "notesTitle": ""
+    },
+    {
+      "version": "5.3.12",
+      "build": "5.3.12.35805101",
+      "date": "2026-08-22",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-5.3.12.35805101-a981f41f.dmg",
+          "sizeText": "419.3 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-5.3.12.35805101-a981f41f.dmg",
+          "sizeText": "449.7 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-5.3.12.35805101-a981f41f.exe",
+          "sizeText": "395.4 MB"
+        }
+      },
+      "notes": [],
+      "notesUrl": "",
+      "notesTitle": ""
+    },
+    {
+      "version": "5.3.11",
+      "build": "5.3.11.35348084",
+      "date": "2026-08-22",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-5.3.11.35348084-45487630.dmg",
+          "sizeText": "419.5 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-5.3.11.35348084-45487630.dmg",
+          "sizeText": "449.5 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-5.3.11.35348084-45487630.exe",
+          "sizeText": "395.8 MB"
+        }
+      },
+      "notes": [],
+      "notesUrl": "",
+      "notesTitle": ""
+    },
+    {
+      "version": "5.3.10",
+      "build": "5.3.10.35235434",
+      "date": "2026-08-22",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-5.3.10.35235434-6d1e5e1e.dmg",
+          "sizeText": "419.2 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-5.3.10.35235434-6d1e5e1e.dmg",
+          "sizeText": "449.6 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-5.3.10.35235434-6d1e5e1e.exe",
+          "sizeText": "395.8 MB"
+        }
+      },
+      "notes": [],
+      "notesUrl": "",
+      "notesTitle": ""
+    },
+    {
+      "version": "5.3.8",
+      "build": "5.3.8.34705286",
+      "date": "2026-08-22",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-5.3.8.34705286-e9991e2b.dmg",
+          "sizeText": "417.1 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-5.3.8.34705286-e9991e2b.dmg",
+          "sizeText": "447.4 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-5.3.8.34705286-e9991e2b.exe",
+          "sizeText": "388.4 MB"
+        }
+      },
+      "notes": [],
+      "notesUrl": "",
+      "notesTitle": ""
+    },
+    {
+      "version": "5.3.7",
+      "build": "5.3.7.34565924",
+      "date": "2026-08-22",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-5.3.7.34565924-f14ad4d6.dmg",
+          "sizeText": "417.2 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-5.3.7.34565924-f14ad4d6.dmg",
+          "sizeText": "447.3 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-5.3.7.34565924-f14ad4d6.exe",
+          "sizeText": "388.4 MB"
+        }
+      },
+      "notes": [],
+      "notesUrl": "",
+      "notesTitle": ""
+    },
+    {
+      "version": "5.3.6",
+      "build": "5.3.6.34491019",
+      "date": "2026-08-22",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-5.3.6.34491019-15f35b27.dmg",
+          "sizeText": "417.0 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-5.3.6.34491019-15f35b27.dmg",
+          "sizeText": "447.3 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-5.3.6.34491019-15f35b27.exe",
+          "sizeText": "388.6 MB"
+        }
+      },
+      "notes": [],
+      "notesUrl": "",
+      "notesTitle": ""
+    },
+    {
+      "version": "5.3.5",
+      "build": "5.3.5.34189228",
+      "date": "2026-08-22",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-5.3.5.34189228-8044e898.dmg",
+          "sizeText": "419.7 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-5.3.5.34189228-8044e898.dmg",
+          "sizeText": "450.0 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-5.3.5.34189228-8044e898.exe",
+          "sizeText": "521.0 MB"
+        }
+      },
+      "notes": [],
+      "notesUrl": "",
+      "notesTitle": ""
+    },
+    {
+      "version": "5.3.3",
+      "build": "5.3.3.33961208",
+      "date": "2026-08-22",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-5.3.3.33961208-5801cce5.dmg",
+          "sizeText": "419.8 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-5.3.3.33961208-5801cce5.dmg",
+          "sizeText": "450.0 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-5.3.3.33961208-5801cce5.exe",
+          "sizeText": "521.0 MB"
+        }
+      },
+      "notes": [],
+      "notesUrl": "",
+      "notesTitle": ""
+    },
+    {
+      "version": "5.3.1",
+      "build": "5.3.1.33854448",
+      "date": "2026-08-22",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-5.3.1.33854448-bf6ed6d4.dmg",
+          "sizeText": "419.6 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-5.3.1.33854448-bf6ed6d4.dmg",
+          "sizeText": "450.0 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-5.3.1.33854448-bf6ed6d4.exe",
+          "sizeText": "520.9 MB"
+        }
+      },
+      "notes": [],
+      "notesUrl": "",
+      "notesTitle": ""
+    },
+    {
+      "version": "5.3.0",
+      "build": "5.3.0.33588692",
+      "date": "2026-08-25",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-5.3.0.33588692-f1d82b94.dmg",
+          "sizeText": "419.6 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-5.3.0.33588692-f1d82b94.dmg",
+          "sizeText": "450.0 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-5.3.0.33588692-f1d82b94.exe",
+          "sizeText": "521.0 MB"
+        }
+      },
+      "notes": [],
+      "notesUrl": "",
+      "notesTitle": ""
+    },
+    {
+      "version": "5.2.6",
+      "build": "5.2.6.33159827",
+      "date": "2026-08-25",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-5.2.6.33159827-8ee6bc11.dmg",
+          "sizeText": "383.1 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-5.2.6.33159827-8ee6bc11.dmg",
+          "sizeText": "389.1 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-5.2.6.33159827-8ee6bc11.exe",
+          "sizeText": "485.7 MB"
+        }
+      },
+      "notes": [],
+      "notesUrl": "",
+      "notesTitle": ""
+    },
+    {
+      "version": "5.2.5",
+      "build": "5.2.5.32793105",
+      "date": "2026-08-25",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-5.2.5.32793105-1067a2de.dmg",
+          "sizeText": "383.0 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-5.2.5.32793105-1067a2de.dmg",
+          "sizeText": "389.0 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-5.2.5.32793105-1067a2de.exe",
+          "sizeText": "488.7 MB"
+        }
+      },
+      "notes": [],
+      "notesUrl": "",
+      "notesTitle": ""
+    },
+    {
+      "version": "5.2.3",
+      "build": "5.2.3.32357678",
+      "date": "2026-08-25",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-5.2.3.32357678-3865830d.dmg",
+          "sizeText": "383.0 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-5.2.3.32357678-3865830d.dmg",
+          "sizeText": "388.9 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-5.2.3.32357678-3865830d.exe",
+          "sizeText": "486.1 MB"
+        }
+      },
+      "notes": [],
+      "notesUrl": "",
+      "notesTitle": ""
+    },
+    {
+      "version": "5.2.2",
+      "build": "5.2.2.32228760",
+      "date": "2026-08-25",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-5.2.2.32228760-b62efa0d.dmg",
+          "sizeText": "383.1 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-5.2.2.32228760-b62efa0d.dmg",
+          "sizeText": "388.7 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-5.2.2.32228760-b62efa0d.exe",
+          "sizeText": "485.4 MB"
+        }
+      },
+      "notes": [],
+      "notesUrl": "",
+      "notesTitle": ""
+    },
+    {
+      "version": "5.2.1",
+      "build": "5.2.1.32058260",
+      "date": "2026-08-25",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-5.2.1.32058260-4eb62f56.dmg",
+          "sizeText": "382.8 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-5.2.1.32058260-4eb62f56.dmg",
+          "sizeText": "388.7 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-5.2.1.32058260-4eb62f56.exe",
+          "sizeText": "485.2 MB"
+        }
+      },
+      "notes": [],
+      "notesUrl": "",
+      "notesTitle": ""
+    },
+    {
+      "version": "5.2.0",
+      "build": "5.2.0.31871183",
+      "date": "2026-08-25",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-5.2.0.31871183-26566df3.dmg",
+          "sizeText": "382.8 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-5.2.0.31871183-26566df3.dmg",
+          "sizeText": "388.7 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-5.2.0.31871183-26566df3.exe",
+          "sizeText": "485.3 MB"
+        }
+      },
+      "notes": [],
+      "notesUrl": "",
+      "notesTitle": ""
+    },
+    {
+      "version": "5.1.7",
+      "build": "5.1.7.31711488",
+      "date": "2026-08-25",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-5.1.7.31711488-dc01bf2f.dmg",
+          "sizeText": "376.6 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-5.1.7.31711488-dc01bf2f.dmg",
+          "sizeText": "382.1 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-5.1.7.31711488-dc01bf2f.exe",
+          "sizeText": "487.8 MB"
+        }
+      },
+      "notes": [],
+      "notesUrl": "",
+      "notesTitle": ""
+    },
+    {
+      "version": "5.1.6",
+      "build": "5.1.6.31448847",
+      "date": "2026-08-25",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-5.1.6.31448847-0db69b64.dmg",
+          "sizeText": "376.9 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-5.1.6.31448847-0db69b64.dmg",
+          "sizeText": "382.3 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-5.1.6.31448847-0db69b64.exe",
+          "sizeText": "489.1 MB"
+        }
+      },
+      "notes": [],
+      "notesUrl": "",
+      "notesTitle": ""
+    },
+    {
+      "version": "5.1.4",
+      "build": "5.1.4.31089177",
+      "date": "2026-08-25",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-5.1.4.31089177-d0637046.dmg",
+          "sizeText": "373.5 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-5.1.4.31089177-d0637046.dmg",
+          "sizeText": "378.9 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-5.1.4.31089177-d0637046.exe",
+          "sizeText": "488.3 MB"
+        }
+      },
+      "notes": [],
+      "notesUrl": "",
+      "notesTitle": ""
+    },
+    {
+      "version": "5.1.3",
+      "build": "5.1.3.31006914",
+      "date": "2026-08-25",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-5.1.3.31006914-4d1a3954.dmg",
+          "sizeText": "373.4 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-5.1.3.31006914-4d1a3954.dmg",
+          "sizeText": "378.9 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-5.1.3.31006914-4d1a3954.exe",
+          "sizeText": "485.8 MB"
+        }
+      },
+      "notes": [],
+      "notesUrl": "",
+      "notesTitle": ""
+    },
+    {
+      "version": "5.1.2",
+      "build": "5.1.2.30975940",
+      "date": "2026-06-17",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-5.1.2.30975940-b9604175.dmg",
+          "sizeText": "373.5 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-5.1.2.30975940-b9604175.dmg",
+          "sizeText": "378.9 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-5.1.2.30975940-b9604175.exe",
+          "sizeText": "485.8 MB"
+        }
+      },
+      "notes": [],
+      "notesUrl": "",
+      "notesTitle": ""
+    },
+    {
+      "version": "5.1.1",
+      "build": "5.1.1.30799983",
+      "date": "2026-06-15",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-5.1.1.30799983-ecafd59f.dmg",
+          "sizeText": "373.4 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-5.1.1.30799983-ecafd59f.dmg",
+          "sizeText": "378.9 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-5.1.1.30799983-ecafd59f.exe",
+          "sizeText": "485.7 MB"
+        }
+      },
+      "notes": [],
+      "notesUrl": "",
+      "notesTitle": ""
+    },
+    {
+      "version": "5.1.0",
+      "build": "5.1.0.30654851",
+      "date": "2026-06-13",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-5.1.0.30654851-53581e85.dmg",
+          "sizeText": "369.8 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-5.1.0.30654851-53581e85.dmg",
+          "sizeText": "375.2 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-5.1.0.30654851-53581e85.exe",
+          "sizeText": "483.1 MB"
+        }
+      },
+      "notes": [],
+      "notesUrl": "",
+      "notesTitle": ""
+    },
+    {
+      "version": "5.0.5",
+      "build": "5.0.5.30547054",
+      "date": "2026-06-12",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-5.0.5.30547054-ac1b5bd1.dmg",
+          "sizeText": "360.9 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-5.0.5.30547054-ac1b5bd1.dmg",
+          "sizeText": "388.3 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-5.0.5.30547054-ac1b5bd1.exe",
+          "sizeText": "463.2 MB"
+        }
+      },
+      "notes": [],
+      "notesUrl": "",
+      "notesTitle": ""
+    },
+    {
+      "version": "5.0.3",
+      "build": "5.0.3.30227252",
+      "date": "2026-06-08",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-5.0.3.30227252-d9cae1ce.dmg",
+          "sizeText": "413.5 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-5.0.3.30227252-d9cae1ce.dmg",
+          "sizeText": "418.7 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-5.0.3.30227252-d9cae1ce.exe",
+          "sizeText": "484.4 MB"
+        }
+      },
+      "notes": [],
+      "notesUrl": "",
+      "notesTitle": ""
+    },
+    {
+      "version": "5.0.2",
+      "build": "5.0.2.29916712",
+      "date": "2026-06-05",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-5.0.2.29916712-0ce39ce2.dmg",
+          "sizeText": "361 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-5.0.2.29916712-0ce39ce2.dmg",
+          "sizeText": "388.4 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-5.0.2.29916712-0ce39ce2.exe",
+          "sizeText": "457.9 MB"
+        }
+      },
+      "notes": [],
+      "notesUrl": "",
+      "notesTitle": ""
+    },
+    {
+      "version": "5.0.1",
+      "build": "5.0.1.29819948",
+      "date": "2026-06-04",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-5.0.1.29819948-42ef0a52.dmg",
+          "sizeText": "362 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-5.0.1.29819948-42ef0a52.dmg",
+          "sizeText": "388.5 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-5.0.1.29819948-42ef0a52.exe",
+          "sizeText": "460.7 MB"
+        }
+      },
+      "notes": [],
+      "notesUrl": "",
+      "notesTitle": ""
+    },
+    {
+      "version": "5.0.0",
+      "build": "5.0.0.29786118",
+      "date": "2026-06-03",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-5.0.0.29786118-c971c575.dmg",
+          "sizeText": "361 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-5.0.0.29786118-c971c575.dmg",
+          "sizeText": "388.5 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-5.0.0.29786118-c971c575.exe",
+          "sizeText": "458 MB"
+        }
+      },
+      "notes": [],
+      "notesUrl": "",
+      "notesTitle": ""
+    },
+    {
+      "version": "4.24.8",
+      "build": "4.24.8.29724905",
+      "date": "2026-06-03",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-4.24.8.29724905-8d20aed6.dmg",
+          "sizeText": "350.6 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-4.24.8.29724905-8d20aed6.dmg",
+          "sizeText": "377.1 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-4.24.8.29724905-8d20aed6.exe",
+          "sizeText": "450.2 MB"
+        }
+      },
+      "notes": [],
+      "notesUrl": "",
+      "notesTitle": ""
+    },
+    {
+      "version": "4.24.7",
+      "build": "4.24.7.29589271",
+      "date": "2026-06-01",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-4.24.7.29589271-f87d79a5.dmg",
+          "sizeText": "350.6 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-4.24.7.29589271-f87d79a5.dmg",
+          "sizeText": "377.1 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-4.24.7.29589271-f87d79a5.exe",
+          "sizeText": "452.8 MB"
+        }
+      },
+      "notes": [],
+      "notesUrl": "",
+      "notesTitle": ""
+    },
+    {
+      "version": "4.24.6",
+      "build": "4.24.6.29547526",
+      "date": "2026-05-31",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-4.24.6.29547526-8792602e.dmg",
+          "sizeText": "350.6 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-4.24.6.29547526-8792602e.dmg",
+          "sizeText": "377.1 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-4.24.6.29547526-8792602e.exe",
+          "sizeText": "450.2 MB"
+        }
+      },
+      "notes": [],
+      "notesUrl": "",
+      "notesTitle": ""
+    },
+    {
+      "version": "4.24.5",
+      "build": "4.24.5.29470881",
+      "date": "2026-05-31",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-4.24.5.29470881-8666543c.dmg",
+          "sizeText": "350.5 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-4.24.5.29470881-8666543c.dmg",
+          "sizeText": "377.1 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-4.24.5.29470881-8666543c.exe",
+          "sizeText": "450.2 MB"
+        }
+      },
+      "notes": [],
+      "notesUrl": "",
+      "notesTitle": ""
+    },
+    {
+      "version": "4.24.4",
+      "build": "4.24.4.29422536",
+      "date": "2026-05-30",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-4.24.4.29422536-df6c48c4.dmg",
+          "sizeText": "350.6 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-4.24.4.29422536-df6c48c4.dmg",
+          "sizeText": "377.1 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-4.24.4.29422536-df6c48c4.exe",
+          "sizeText": "450.2 MB"
+        }
+      },
+      "notes": [],
+      "notesUrl": "",
+      "notesTitle": ""
+    },
+    {
+      "version": "4.24.3",
+      "build": "4.24.3.29355504",
+      "date": "2026-05-29",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-4.24.3.29355504-8711449a.dmg",
+          "sizeText": "350.6 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-4.24.3.29355504-8711449a.dmg",
+          "sizeText": "377.1 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-4.24.3.29355504-8711449a.exe",
+          "sizeText": "452.8 MB"
+        }
+      },
+      "notes": [],
+      "notesUrl": "",
+      "notesTitle": ""
+    },
+    {
+      "version": "4.24.2",
+      "build": "4.24.2.29266680",
+      "date": "2026-05-28",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-4.24.2.29266680-b451b1ea.dmg",
+          "sizeText": "350.6 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-4.24.2.29266680-b451b1ea.dmg",
+          "sizeText": "377.1 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-4.24.2.29266680-b451b1ea.exe",
+          "sizeText": "450.2 MB"
+        }
+      },
+      "notes": [],
+      "notesUrl": "",
+      "notesTitle": ""
+    },
+    {
+      "version": "4.24.1",
+      "build": "4.24.1.29012054",
+      "date": "2026-05-25",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-4.24.1.29012054-dd5bfae4.dmg",
+          "sizeText": "352.2 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-4.24.1.29012054-dd5bfae4.dmg",
+          "sizeText": "378.8 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-4.24.1.29012054-dd5bfae4.exe",
+          "sizeText": "451.8 MB"
+        }
+      },
+      "notes": [],
+      "notesUrl": "",
+      "notesTitle": ""
+    },
+    {
+      "version": "4.24.0",
+      "build": "4.24.0.28904407",
+      "date": "2026-05-24",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-4.24.0.28904407-c0655017.dmg",
+          "sizeText": "352.2 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-4.24.0.28904407-c0655017.dmg",
+          "sizeText": "378.8 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-4.24.0.28904407-c0655017.exe",
+          "sizeText": "451.8 MB"
+        }
+      },
+      "notes": [],
+      "notesUrl": "",
+      "notesTitle": ""
+    },
+    {
+      "version": "4.22.16",
+      "build": "4.22.16.28604695",
+      "date": "2026-05-21",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-4.22.16.28604695-d6e0fd20.dmg",
+          "sizeText": "281 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-4.22.16.28604695-d6e0fd20.dmg",
+          "sizeText": "286.2 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-4.22.16.28604695-d6e0fd20.exe",
+          "sizeText": "222.7 MB"
+        }
+      },
+      "notes": [],
+      "notesUrl": "",
+      "notesTitle": ""
+    },
+    {
+      "version": "4.22.15",
+      "build": "4.22.15.28494097",
+      "date": "2026-05-19",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-4.22.15.28494097-a145005c.dmg",
+          "sizeText": "281 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-4.22.15.28494097-a145005c.dmg",
+          "sizeText": "286.1 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-4.22.15.28494097-a145005c.exe",
+          "sizeText": "222.6 MB"
+        }
+      },
+      "notes": [],
+      "notesUrl": "",
+      "notesTitle": ""
+    },
+    {
+      "version": "4.22.12",
+      "build": "4.22.12.28144878",
+      "date": "2026-05-15",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-4.22.12.28144878-b48292e2.dmg",
+          "sizeText": "280.7 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-4.22.12.28144878-b48292e2.dmg",
+          "sizeText": "286 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-4.22.12.28144878-b48292e2.exe",
+          "sizeText": "217.7 MB"
+        }
+      },
+      "notes": [],
+      "notesUrl": "",
+      "notesTitle": ""
+    },
+    {
+      "version": "4.22.11",
+      "build": "4.22.11.27879455",
+      "date": "2026-05-12",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-4.22.11.27879455-593b3a94.dmg",
+          "sizeText": "285.5 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-4.22.11.27879455-593b3a94.dmg",
+          "sizeText": "291.3 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-4.22.11.27879455-593b3a94.exe",
+          "sizeText": "223.1 MB"
+        }
+      },
+      "notes": [],
+      "notesUrl": "",
+      "notesTitle": ""
+    },
+    {
+      "version": "4.22.10",
+      "build": "4.22.10.27634624",
+      "date": "2026-05-09",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-4.22.10.27634624-ec5e02bd.dmg",
+          "sizeText": "285.5 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-4.22.10.27634624-ec5e02bd.dmg",
+          "sizeText": "291.3 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-4.22.10.27634624-ec5e02bd.exe",
+          "sizeText": "223.1 MB"
+        }
+      },
+      "notes": [],
+      "notesUrl": "",
+      "notesTitle": ""
+    },
+    {
+      "version": "4.22.7",
+      "build": "4.22.7.27539150",
+      "date": "2026-05-08",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-4.22.7.27539150-6dc48069.dmg",
+          "sizeText": "284.7 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-4.22.7.27539150-6dc48069.dmg",
+          "sizeText": "290.5 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-4.22.7.27539150-6dc48069.exe",
+          "sizeText": "223 MB"
+        }
+      },
+      "notes": [],
+      "notesUrl": "",
+      "notesTitle": ""
+    },
+    {
+      "version": "4.22.5",
+      "build": "4.22.5.27292993",
+      "date": "2026-05-05",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-4.22.5.27292993-32908d99.dmg",
+          "sizeText": "284.4 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-4.22.5.27292993-32908d99.dmg",
+          "sizeText": "290.2 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-4.22.5.27292993-32908d99.exe",
+          "sizeText": "220.5 MB"
+        }
+      },
+      "notes": [],
+      "notesUrl": "",
+      "notesTitle": ""
+    },
+    {
+      "version": "4.22.4",
+      "build": "4.22.4.27198117",
+      "date": "2026-05-04",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-4.22.4.27198117-5a1b8c29.dmg",
+          "sizeText": "284.4 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-4.22.4.27198117-5a1b8c29.dmg",
+          "sizeText": "290.2 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-4.22.4.27198117-5a1b8c29.exe",
+          "sizeText": "220.5 MB"
+        }
+      },
+      "notes": [],
+      "notesUrl": "",
+      "notesTitle": ""
+    },
+    {
+      "version": "4.22.3",
+      "build": "4.22.3.27106522",
+      "date": "2026-05-03",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-4.22.3.27106522-ea03c69c.dmg",
+          "sizeText": "284.4 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-4.22.3.27106522-ea03c69c.dmg",
+          "sizeText": "290.2 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-4.22.3.27106522-ea03c69c.exe",
+          "sizeText": "220.5 MB"
+        }
+      },
+      "notes": [],
+      "notesUrl": "",
+      "notesTitle": ""
+    },
+    {
+      "version": "4.22.1",
+      "build": "4.22.1.27040153",
+      "date": "2026-05-02",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-4.22.1.27040153-ba882513.dmg",
+          "sizeText": "284.4 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-4.22.1.27040153-ba882513.dmg",
+          "sizeText": "290.2 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-4.22.1.27040153-ba882513.exe",
+          "sizeText": "220.5 MB"
+        }
+      },
+      "notes": [],
+      "notesUrl": "",
+      "notesTitle": ""
+    },
+    {
+      "version": "4.22.0",
+      "build": "4.22.0.26930221",
+      "date": "2026-05-01",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-4.22.0.26930221-c6500cff.dmg",
+          "sizeText": "284.3 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-4.22.0.26930221-c6500cff.dmg",
+          "sizeText": "290.1 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-4.22.0.26930221-c6500cff.exe",
+          "sizeText": "220.3 MB"
+        }
+      },
+      "notes": [],
+      "notesUrl": "",
+      "notesTitle": ""
+    },
+    {
+      "version": "4.21.1",
+      "build": "4.21.1.26755831",
+      "date": "2026-04-29",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-4.21.1.26755831-0d3a8bc6.dmg",
+          "sizeText": "286.4 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-4.21.1.26755831-0d3a8bc6.dmg",
+          "sizeText": "292.2 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-4.21.1.26755831-0d3a8bc6.exe",
+          "sizeText": "213.4 MB"
+        }
+      },
+      "notes": [],
+      "notesUrl": "",
+      "notesTitle": ""
+    },
+    {
+      "version": "4.21.0",
+      "build": "4.21.0.26706589",
+      "date": "2026-04-29",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-4.21.0.26706589-8a25f0af.dmg",
+          "sizeText": "286.4 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-4.21.0.26706589-8a25f0af.dmg",
+          "sizeText": "292.1 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-4.21.0.26706589-8a25f0af.exe",
+          "sizeText": "213.4 MB"
+        }
+      },
+      "notes": [],
+      "notesUrl": "",
+      "notesTitle": ""
+    },
+    {
+      "version": "4.20.4",
+      "build": "4.20.4.26603680",
+      "date": "2026-04-27",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-4.20.4.26603680-548caa0d.dmg",
+          "sizeText": "184.5 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-4.20.4.26603680-548caa0d.dmg",
+          "sizeText": "198.1 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-4.20.4.26603680-548caa0d.exe",
+          "sizeText": "149.3 MB"
+        }
+      },
+      "notes": [],
+      "notesUrl": "",
+      "notesTitle": ""
+    },
+    {
+      "version": "4.20.3",
+      "build": "4.20.3.26501908",
+      "date": "2026-04-26",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-4.20.3.26501908-6e248265.dmg",
+          "sizeText": "184.6 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-4.20.3.26501908-6e248265.dmg",
+          "sizeText": "198.3 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-4.20.3.26501908-6e248265.exe",
+          "sizeText": "149.2 MB"
+        }
+      },
+      "notes": [],
+      "notesUrl": "",
+      "notesTitle": ""
+    },
+    {
+      "version": "4.20.1",
+      "build": "4.20.1.26270750",
+      "date": "2026-04-24",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-4.20.1.26270750-53d13beb.dmg",
+          "sizeText": "184.2 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-4.20.1.26270750-53d13beb.dmg",
+          "sizeText": "198 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-4.20.1.26270750-53d13beb.exe",
+          "sizeText": "149 MB"
+        }
+      },
+      "notes": [],
+      "notesUrl": "",
+      "notesTitle": ""
+    },
+    {
+      "version": "4.10.4",
+      "build": "4.10.4.26327962",
+      "date": "2026-04-24",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-4.10.4.26327962-85c7979b.dmg",
+          "sizeText": "172.6 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-4.10.4.26327962-85c7979b.dmg",
+          "sizeText": "178 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-4.10.4.26327962-85c7979b.exe",
+          "sizeText": "145.1 MB"
+        }
+      },
+      "notes": [],
+      "notesUrl": "",
+      "notesTitle": ""
+    },
+    {
+      "version": "4.10.2",
+      "build": "4.10.2.25783960",
+      "date": "2026-04-18",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-4.10.2.25783960-c16c5524.dmg",
+          "sizeText": "172.6 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-4.10.2.25783960-c16c5524.dmg",
+          "sizeText": "178 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-4.10.2.25783960-c16c5524.exe",
+          "sizeText": "145.1 MB"
+        }
+      },
+      "notes": [],
+      "notesUrl": "",
+      "notesTitle": ""
+    },
+    {
+      "version": "4.10.1",
+      "build": "4.10.1.25648017",
+      "date": "2026-04-16",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-4.10.1.25648017-3aa8d419.dmg",
+          "sizeText": "172.6 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-4.10.1.25648017-3aa8d419.dmg",
+          "sizeText": "178 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-4.10.1.25648017-3aa8d419.exe",
+          "sizeText": "145.1 MB"
+        }
+      },
+      "notes": [],
+      "notesUrl": "",
+      "notesTitle": ""
+    },
+    {
+      "version": "4.10.0",
+      "build": "4.10.0.25559938",
+      "date": "2026-04-15",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-4.10.0.25559938-868e84e9.dmg",
+          "sizeText": "172.6 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-4.10.0.25559938-868e84e9.dmg",
+          "sizeText": "178 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-4.10.0.25559938-868e84e9.exe",
+          "sizeText": "145.1 MB"
+        }
+      },
+      "notes": [],
+      "notesUrl": "",
+      "notesTitle": ""
+    },
+    {
+      "version": "4.9.6",
+      "build": "4.9.6.25479271",
+      "date": "2026-04-14",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-4.9.6.25479271-21f0d738.dmg",
+          "sizeText": "172 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-4.9.6.25479271-21f0d738.dmg",
+          "sizeText": "177.4 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-4.9.6.25479271-21f0d738.exe",
+          "sizeText": "145.4 MB"
+        }
+      },
+      "notes": [],
+      "notesUrl": "",
+      "notesTitle": ""
+    },
+    {
+      "version": "4.9.4",
+      "build": "4.9.4.25439278",
+      "date": "2026-04-14",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-4.9.4.25439278-c671e769.dmg",
+          "sizeText": "172 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-4.9.4.25439278-c671e769.dmg",
+          "sizeText": "177.4 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-4.9.4.25439278-c671e769.exe",
+          "sizeText": "145.4 MB"
+        }
+      },
+      "notes": [],
+      "notesUrl": "",
+      "notesTitle": ""
+    },
+    {
+      "version": "4.9.3",
+      "build": "4.9.3.25145143",
+      "date": "2026-04-11",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-4.9.3.25145143-f10cab22.dmg",
+          "sizeText": "172 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-4.9.3.25145143-f10cab22.dmg",
+          "sizeText": "177.4 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-4.9.3.25145143-f10cab22.exe",
+          "sizeText": "145.4 MB"
+        }
+      },
+      "notes": [],
+      "notesUrl": "",
+      "notesTitle": ""
+    },
+    {
+      "version": "4.9.2",
+      "build": "4.9.2.25088780",
+      "date": "2026-04-10",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-4.9.2.25088780-96671b84.dmg",
+          "sizeText": "172 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-4.9.2.25088780-96671b84.dmg",
+          "sizeText": "177.4 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-4.9.2.25088780-96671b84.exe",
+          "sizeText": "144.9 MB"
+        }
+      },
+      "notes": [],
+      "notesUrl": "",
+      "notesTitle": ""
+    },
+    {
+      "version": "4.9.1",
+      "build": "4.9.1.25024097",
+      "date": "2026-04-09",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-4.9.1.25024097-2ff879d4.dmg",
+          "sizeText": "171.9 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-4.9.1.25024097-2ff879d4.dmg",
+          "sizeText": "177.2 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-4.9.1.25024097-2ff879d4.exe",
+          "sizeText": "144.8 MB"
+        }
+      },
+      "notes": [],
+      "notesUrl": "",
+      "notesTitle": ""
+    },
+    {
+      "version": "4.9.0",
+      "build": "4.9.0.24968073",
+      "date": "2026-04-08",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-4.9.0.24968073-9e8a95e3.dmg",
+          "sizeText": "171.9 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-4.9.0.24968073-9e8a95e3.dmg",
+          "sizeText": "177.2 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-4.9.0.24968073-9e8a95e3.exe",
+          "sizeText": "144.8 MB"
+        }
+      },
+      "notes": [],
+      "notesUrl": "",
+      "notesTitle": ""
+    },
+    {
+      "version": "4.8.3",
+      "build": "4.8.3.24891663",
+      "date": "2026-04-08",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-4.8.3.24891663-2fecf297.dmg",
+          "sizeText": "170.6 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-4.8.3.24891663-2fecf297.dmg",
+          "sizeText": "176 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-4.8.3.24891663-2fecf297.exe",
+          "sizeText": "144.4 MB"
+        }
+      },
+      "notes": [],
+      "notesUrl": "",
+      "notesTitle": ""
+    },
+    {
+      "version": "4.8.2",
+      "build": "4.8.2.24695016",
+      "date": "2026-04-05",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-4.8.2.24695016-aee737ca.dmg",
+          "sizeText": "170.6 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-4.8.2.24695016-aee737ca.dmg",
+          "sizeText": "176 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-4.8.2.24695016-aee737ca.exe",
+          "sizeText": "144.4 MB"
+        }
+      },
+      "notes": [],
+      "notesUrl": "",
+      "notesTitle": ""
+    },
+    {
+      "version": "4.8.1",
+      "build": "4.8.1.24540648",
+      "date": "2026-04-04",
+      "packages": {
+        "darwin-arm64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-arm64/WorkBuddy-darwin-arm64-4.8.1.24540648-cfeee0fc.dmg",
+          "sizeText": "170.6 MB"
+        },
+        "darwin-x64": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/darwin-x64/WorkBuddy-darwin-x64-4.8.1.24540648-cfeee0fc.dmg",
+          "sizeText": "175.9 MB"
+        },
+        "win32-x64-user": {
+          "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-4.8.1.24540648-cfeee0fc.exe",
+          "sizeText": "144.4 MB"
+        }
+      },
+      "notes": [],
+      "notesUrl": "",
+      "notesTitle": ""
+    }
+  ]
+}

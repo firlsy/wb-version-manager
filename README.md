@@ -6,8 +6,18 @@
 [![Node](https://img.shields.io/badge/Node.js-20%2B-339933?logo=node.js)](#快速开始)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![No dependencies](https://img.shields.io/badge/dependencies-0-brightgreen)](#快速开始)
+[![Release](https://img.shields.io/github/v/release/firlsy/wb-version-manager)](https://github.com/firlsy/wb-version-manager/releases/latest)
 
 WorkBuddy 桌面端会在后台把完整安装包下载到用户目录，下次启动时静默安装，界面里没有「停在当前版本」的选项。这个工具补上这个开关：**锁定版本 + 隔离更新包 + 一键回退**，并且不动安装目录里的任何文件。
+
+## 下载
+
+到 [Releases](https://github.com/firlsy/wb-version-manager/releases/latest) 下载：
+
+| 文件 | 说明 |
+| --- | --- |
+| `wb-version-manager-v1.0.0.zip` | 便携包，解压后双击 `启动工具.bat`（需要 Node.js 20+） |
+| `wb-vers-manager-v1.0.0.ps1` | 独立 CLI，单文件，不需要 Node.js |
 
 ![主界面](docs/screenshot-main.png)
 

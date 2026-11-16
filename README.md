@@ -24,8 +24,8 @@ WorkBuddy 桌面端会在后台把完整安装包下载到用户目录，下次�
 ## 功能
 
 - **自动识别两款客户端**：WorkBuddy（国内版）与 WorkBuddy AI（国际版），读取 `install-manifest.json` 得到真实产品版本，而不是根目录的 Electron 版本号。
-- **默认锁定当前版本**：一键把正在使用的版本钉住，同时拦截后台更新。
-- **拦截自动更新**：把已下载的 `installer.exe` 移入隔离区，并用同名占位目录阻止更新器再次落盘。安装目录零改动，无需管理员权限。
+- **默认锁定当前版本**：一键把正在使用的版本钉住，同时关掉客户端的启动强制更新。
+- **拦截自动更新**：关启动开关 → 回收已下载的安装包 → 对缓存目录加写入拒绝，三层同时生效。安装目录零改动，不需要管理员权限，也不会再弹「更新需要管理员权限」。
 - **版本清单**：内置官方历史版本目录（当前 101 个版本），支持按系列筛选、搜索、标记「当前安装 / 锁定中 / 官方最新 / 已下载」。
 - **官方更新说明**：点版本号或「详情」，右侧抽屉展示官网更新日志原文要点，附官方原文链接。
 - **下载指定版本**：直接从官方 CDN 下载 Windows 安装包，带进度、速度与断点文件清理。
@@ -55,31 +55,37 @@ node server.js
 ## 使用
 
 1. **确认版本**：顶部两张卡片显示两款客户端各自的安装目录与当前版本。
-2. **锁定**：点「锁定当前版本」。工具会记录版本、把待安装的更新包移入隔离区，并放置占位目录。
+2. **锁定**：点「锁定当前版本」。工具会记录版本、关掉启动强制更新、把已下载的更新包回收进 `store/`，并对缓存目录加写入拒绝。
 3. **查看更新内容**：在版本清单点任意版本，右侧抽屉显示官方更新日志；「查看官方更新日志原文」可跳转官网。
 4. **下载 / 导出**：行内「下载」获取 Windows 安装包；勾选多个版本后可批量复制链接或导出表格。
 5. **回退**：在目标版本点「详情 → 安装此版本」，或下载后点「安装」。安装前会关闭客户端并请求一次 UAC 授权。
 
 ## 工作原理
 
-### 锁定：隔离更新包，而不是改程序
+### 锁定：三层同时生效，安装目录一个字节都不改
 
-Windows 上更新器把安装包放在：
+从 5.9 起，客户端的自动更新流程是这样的：
 
-```text
-%LOCALAPPDATA%\@genieworkbuddy-desktop-updater\installer.exe
-```
+1. 启动时读 `app-config.json` 里的 `startupForceAutoUpdate`，为真就执行「早期静默更新」；
+2. 定期请求 `https://www.workbuddy.cn/v2/update?platform=workbuddy-win32-x64-user&version=<当前版本>`；
+3. 把新版本下载到 `%LOCALAPPDATA%\Temp\workbuddy-update-x64-workbuddy\WorkBuddy-Setup-<版本>.exe`；
+4. 下次启动时尝试静默安装，安装目录不可写就弹「更新需要管理员权限」。
 
-锁定做两件事：
+只堵第 4 步不够——弹窗会一直出现。所以锁定做三件事：
 
-1. 把已存在的 `installer.exe` 移动到隔离区 `%LOCALAPPDATA%\wb-version-manager\quarantine\`（保留时间戳，不删除）。
-2. 在原位置创建一个**同名目录** `installer.exe\`。
+| 层 | 动作 | 落点 |
+| --- | --- | --- |
+| 启动开关 | 写入 `startupForceAutoUpdate: false` | `%USERPROFILE%\.workbuddy\app\app-config.json`<br>`%USERPROFILE%\.workbuddy\settings.json` |
+| 缓存回收 | 已下载的安装包移入本地仓库，可继续用于回退 | `store/<应用>/WorkBuddy-win32-x64-user-<版本>-recycled.exe` |
+| 写入阻断 | 对缓存目录加 `DENY (W)` ACL，下载落盘直接 `EPERM` | `%LOCALAPPDATA%\Temp\workbuddy-update-x64-workbuddy` |
 
-目录无法被文件写入覆盖，更新器下一次下载会在最后落盘时失败，而已安装的客户端继续正常运行。`%ProgramFiles%\WorkBuddy*` 里的文件一个字节都没有改，代码签名保持有效。
+同时清掉 `win-install-failure.json` 里的失败计数——客户端连续失败 3 次或 24 小时内失败过，就会进入「熔断」，每次启动都弹一次管理员权限提示。清掉计数才能真正止住弹窗。
 
-解除拦截时删除空占位目录，并把最近一个隔离包放回原位（可选）。
+旧版（5.9 之前）的更新器缓存 `%LOCALAPPDATA%\@genieworkbuddy-desktop-updater\installer.exe` 也一并处理：文件移入隔离区，原位置换成同名目录，写入必然失败。
 
-> 两款客户端共用同一个更新器缓存目录，因此「拦截」是全局的；版本锁定则按应用分别记录。
+解除锁定时反向操作：删掉 ACL 拒绝项、把 `startupForceAutoUpdate` 恢复成原来的值（原来没有这个键就删掉），已回收的安装包留在 `store/` 里不删。
+
+> 两款客户端的缓存目录、配置目录彼此独立，拦截按应用分别记录；旧版更新器目录是共用的，只要还有一个应用处于锁定状态就保持拦截。
 
 ### 回退：复用官方安装参数
 
@@ -93,9 +99,10 @@ installer.exe /S --updated /UPDATE=1 /D=<安装目录>
 
 | 数据 | 路径 |
 | --- | --- |
-| 用户配置 | `%APPDATA%\WorkBuddy` |
-| 工作区、技能、记忆 | `%USERPROFILE%\.workbuddy-ai` |
-| 更新器缓存 | `%LOCALAPPDATA%\@genieworkbuddy-desktop-updater` |
+| 国内版配置 | `%USERPROFILE%\.workbuddy` |
+| 国际版配置 | `%USERPROFILE%\.workbuddy-ai` |
+| 更新缓存 | `%LOCALAPPDATA%\Temp\workbuddy-update-*` |
+| 旧版更新器 | `%LOCALAPPDATA%\@genieworkbuddy-desktop-updater` |
 
 安装前会校验安装包 SHA-256（官方更新通道提供时），并记录安装前后版本，写入 `data/state.json`。
 
@@ -148,6 +155,10 @@ CLI 与 GUI 共用同一个占位目录，状态各自记录，互不冲突。
 
 ## 常见问题
 
+**锁定后客户端还弹「更新需要管理员权限 / 自动更新未能完成」？**
+
+那是 `win-install-failure.json` 的失败熔断：客户端失败过一次后，24 小时内每次启动都会重弹。v1.0.1 起锁定会同时清掉这条记录、关掉启动强制更新、拒绝缓存写入，弹窗不会再出现。旧版本请先解除锁定再重新锁定一次，或手动删除 `%USERPROFILE%\.workbuddy\app\win-install-failure.json`。
+
 **锁定后客户端提示更新失败？**
 这是预期行为：更新器无法写入安装包。需要更新时先在工具里解除拦截，或直接安装目标版本。
 
@@ -155,7 +166,7 @@ CLI 与 GUI 共用同一个占位目录，状态各自记录，互不冲突。
 不会。安装器只写程序目录；工作区、任务、技能与资料库都在用户目录，工具也会在安装前展示这些路径。
 
 **需要管理员权限吗？**
-锁定/解除不需要。安装或回退需要一次 UAC 授权，因为要写入 `Program Files`。
+锁定/解除不需要——配置写入和 ACL 拒绝都在当前用户权限内完成。安装或回退需要一次 UAC 授权，因为要写入 `Program Files`。
 
 **WorkBuddy 和 WorkBuddy AI 的版本为什么可能不同？**
 两者共用官方发布通道，但安装时间不同，版本可以不同。工具分别检测、分别锁定。

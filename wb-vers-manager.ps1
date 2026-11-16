@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     wb-vers-manager - pin the WorkBuddy desktop client to a specific version.
 
@@ -59,13 +59,16 @@ function Get-ProgramFilesRoot {
 }
 
 if (-not $AppRoot) {
-    $pf = Get-ProgramFilesRoot
-    $candidates = @(
-        (Join-Path $pf 'WorkBuddyAI'),
-        (Join-Path $pf 'WorkBuddy')
-    )
-    $AppRoot = $candidates | Where-Object { Test-Path -LiteralPath $_ } | Select-Object -First 1
-    if (-not $AppRoot) { $AppRoot = $candidates[0] }
+    $roots = @()
+    foreach ($pf in @($env:ProgramW6432, $env:ProgramFiles)) { if ($pf) { $roots += $pf } }
+    foreach ($letter in 'C','D','E','F','G','H','I','J') { $roots += ('{0}:\Program Files' -f $letter) }
+    $candidates = @()
+    foreach ($root in ($roots | Select-Object -Unique)) {
+        $candidates += ('{0}\WorkBuddyAI' -f $root)
+        $candidates += ('{0}\WorkBuddy' -f $root)
+    }
+    $found = $candidates | Where-Object { Test-Path -LiteralPath $_ } | Select-Object -First 1
+    if ($found) { $AppRoot = $found } else { $AppRoot = $candidates[0] }
 }
 
 $UpdaterDir    = Join-Path $env:LOCALAPPDATA '@genieworkbuddy-desktop-updater'
@@ -125,6 +128,101 @@ function Test-Locked {
     $info = Get-StagedInfo
     if ($null -eq $info) { return $false }
     return ($info.Kind -eq 'directory')
+}
+
+# ----------------------------------------------------------------------------
+# Startup guard (5.9+ clients download to %TEMP%\workbuddy-update-*)
+# ----------------------------------------------------------------------------
+
+function Get-RuntimeRoots {
+    $roots = @()
+    foreach ($name in @('.workbuddy', '.workbuddy-ai')) {
+        $p = Join-Path $env:USERPROFILE $name
+        if (Test-Path -LiteralPath $p -PathType Container) { $roots += $p }
+    }
+    return $roots
+}
+
+function Set-JsonFlag {
+    param([string]$Path, [string]$Name, [bool]$Blocked)
+    if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) { return $false }
+    try {
+        $obj = (Get-Content -LiteralPath $Path -Raw -ErrorAction Stop) | ConvertFrom-Json -ErrorAction Stop
+        if ($Blocked) {
+            $obj | Add-Member -NotePropertyName $Name -NotePropertyValue $false -Force
+        } else {
+            $obj.PSObject.Properties.Remove($Name)
+        }
+        $json = $obj | ConvertTo-Json -Depth 100
+        [IO.File]::WriteAllText($Path, $json, (New-Object System.Text.UTF8Encoding($false)))
+        return $true
+    } catch {
+        return $false
+    }
+}
+
+function Set-StartupBlock {
+    param([bool]$Blocked)
+    $n = 0
+    foreach ($root in (Get-RuntimeRoots)) {
+        if (Set-JsonFlag -Path (Join-Path $root 'app\app-config.json') -Name 'startupForceAutoUpdate' -Blocked $Blocked) { $n++ }
+        if (Set-JsonFlag -Path (Join-Path $root 'settings.json') -Name 'startupForceAutoUpdate' -Blocked $Blocked) { $n++ }
+    }
+    return $n
+}
+
+function Clear-InstallFailure {
+    $n = 0
+    foreach ($root in (Get-RuntimeRoots)) {
+        foreach ($f in @('win-install-failure.json', 'win-install-attempt.json')) {
+            $p = Join-Path $root ('app\{0}' -f $f)
+            if (Test-Path -LiteralPath $p -PathType Leaf) {
+                Remove-Item -LiteralPath $p -Force
+                $n++
+            }
+        }
+    }
+    return $n
+}
+
+function Get-UpdateCacheDirs {
+    $tmp = [IO.Path]::GetTempPath().TrimEnd('\')
+    return @(Get-ChildItem -LiteralPath $tmp -Directory -ErrorAction SilentlyContinue |
+             Where-Object { $_.Name -like 'workbuddy-update-*' })
+}
+
+function Move-CachedInstallers {
+    $store = Join-Path $PSScriptRoot 'store'
+    $moved = 0
+    foreach ($dir in (Get-UpdateCacheDirs)) {
+        $files = Get-ChildItem -LiteralPath $dir.FullName -File -ErrorAction SilentlyContinue |
+                 Where-Object { $_.Name -match '^WorkBuddy-Setup-(\d+(\.\d+)+)\.exe$' }
+        foreach ($file in $files) {
+            $null = $file.Name -match '^WorkBuddy-Setup-(\d+(\.\d+)+)\.exe$'
+            $ver = $Matches[1]
+            $appId = if ($file.FullName -like '*-workbuddy-ai\*') { 'workbuddyai' } else { 'workbuddy' }
+            $targetDir = Join-Path $store $appId
+            if (-not (Test-Path -LiteralPath $targetDir)) { New-Item -ItemType Directory -Path $targetDir -Force | Out-Null }
+            $target = Join-Path $targetDir ('WorkBuddy-win32-x64-user-{0}-recycled.exe' -f $ver)
+            try {
+                Move-Item -LiteralPath $file.FullName -Destination $target -Force
+                $moved++
+            } catch {}
+        }
+    }
+    return $moved
+}
+
+function Set-CacheWriteBlock {
+    param([bool]$Blocked)
+    $who = '{0}\{1}' -f $env:USERDOMAIN, $env:USERNAME
+    foreach ($dir in (Get-UpdateCacheDirs)) {
+        if ($Blocked) {
+            & icacls $dir.FullName /deny "${who}:(W)" 2>&1 | Out-Null
+        } else {
+            & icacls $dir.FullName /remove:d $who 2>&1 | Out-Null
+        }
+    }
 }
 
 function Save-State {
@@ -222,26 +320,39 @@ function Invoke-Lock {
         $target = Join-Path $BackupDir ('installer_{0}.exe' -f $stamp)
         try {
             Move-Item -LiteralPath $StagedPath -Destination $target -Force
-            Write-Host ('  [1/2] Quarantined installer.exe -> backup\{0}  ({1})' -f (Split-Path $target -Leaf), (Format-Size $staged.Size))
+            Write-Host ('  [1/5] Quarantined installer.exe -> backup\{0}  ({1})' -f (Split-Path $target -Leaf), (Format-Size $staged.Size))
         } catch {
-            Write-Host '  [1/2] Could not move the staged installer.' -ForegroundColor Red
+            Write-Host '  [1/5] Could not move the staged installer.' -ForegroundColor Red
             Write-Host ('        {0}' -f $_.Exception.Message) -ForegroundColor Red
             Write-Host '        Close WorkBuddy and retry.' -ForegroundColor Yellow
             Write-Host ''
             throw
         }
     } else {
-        Write-Host '  [1/2] Nothing staged - skipping quarantine.'
+        Write-Host '  [1/5] Nothing staged in the legacy updater cache - skipping.'
     }
 
     # Step 2 - drop the placeholder directory
     New-Item -ItemType Directory -Path $StagedPath -Force | Out-Null
-    Write-Host '  [2/2] Placeholder directory created at updater cache'
+    Write-Host '  [2/5] Placeholder directory created at updater cache'
 
-    Save-State -LockState 'locked' -Note 'placeholder directory in place'
+    # Step 3 - turn off startup force auto-update (app-config.json + settings.json)
+    $flags = Set-StartupBlock -Blocked $true
+    Write-Host ('  [3/5] startupForceAutoUpdate=false written to {0} config file(s)' -f $flags)
+
+    # Step 4 - recycle installers the client already downloaded
+    $moved = Move-CachedInstallers
+    Write-Host ('  [4/5] Recycled {0} cached installer(s) into store\' -f $moved)
+
+    # Step 5 - reset the install-failure circuit and deny writes to the cache dir
+    $cleared = Clear-InstallFailure
+    Set-CacheWriteBlock -Blocked $true
+    Write-Host ('  [5/5] Cleared {0} failure record(s); cache directories are now write-protected' -f $cleared)
+
+    Save-State -LockState 'locked' -Note 'startup flag off, cache recycled, writes denied'
 
     Write-Rule ('-' * 60)
-    Write-Host '  Locked. The staged update will not install.' -ForegroundColor Green
+    Write-Host '  Locked. No startup update, no download, no elevation prompt.' -ForegroundColor Green
     Write-Host ''
 }
 
@@ -252,17 +363,17 @@ function Invoke-Unlock {
 
     $staged = Get-StagedInfo
     if ($null -eq $staged -or $staged.Kind -ne 'directory') {
-        Write-Host '  [1/2] No placeholder directory - nothing to release.'
+        Write-Host '  [1/5] No placeholder directory - nothing to release.'
     } else {
         $children = Get-ChildItem -LiteralPath $StagedPath -Force -ErrorAction SilentlyContinue
         if ($children) {
-            Write-Host '  [1/2] Placeholder is not empty - refusing to delete it.' -ForegroundColor Red
+            Write-Host '  [1/5] Placeholder is not empty - refusing to delete it.' -ForegroundColor Red
             Write-Host ('        Inspect {0} manually.' -f $StagedPath) -ForegroundColor Yellow
             Write-Host ''
             return
         }
         Remove-Item -LiteralPath $StagedPath -Force
-        Write-Host '  [1/2] Placeholder directory removed'
+        Write-Host '  [1/5] Placeholder directory removed'
     }
 
     # Step 2 - optionally restore the newest quarantined installer
@@ -274,18 +385,29 @@ function Invoke-Unlock {
     }
 
     if ($KeepInstaller) {
-        Write-Host '  [2/2] -KeepInstaller set - quarantined installer left in the vault.'
+        Write-Host '  [2/5] -KeepInstaller set - quarantined installer left in the vault.'
     } elseif ($null -ne $latest) {
         Copy-Item -LiteralPath $latest.FullName -Destination $StagedPath -Force
-        Write-Host ('  [2/2] Restored {0} ({1})' -f $latest.Name, (Format-Size $latest.Length))
+        Write-Host ('  [2/5] Restored {0} ({1})' -f $latest.Name, (Format-Size $latest.Length))
     } else {
-        Write-Host '  [2/2] No quarantined installer to restore.'
+        Write-Host '  [2/5] No quarantined installer to restore.'
     }
 
-    Save-State -LockState 'unlocked' -Note 'placeholder removed'
+    # Step 3 - let the client update itself again
+    $flags = Set-StartupBlock -Blocked $false
+    Write-Host ('  [3/5] startupForceAutoUpdate restored in {0} config file(s)' -f $flags)
+
+    # Step 4 - drop the write protection on the update cache
+    Set-CacheWriteBlock -Blocked $false
+    Write-Host '  [4/5] Cache directories are writable again'
+
+    # Step 5 - recycled installers stay in store\ so they can still be used for rollback
+    Write-Host '  [5/5] Recycled installers left in store\ for rollback'
+
+    Save-State -LockState 'unlocked' -Note 'placeholder removed, startup flag restored'
 
     Write-Rule ('-' * 60)
-    Write-Host '  Unlocked. The updater can stage installers again.' -ForegroundColor Green
+    Write-Host '  Unlocked. The client can update itself again.' -ForegroundColor Green
     Write-Host ''
 }
 

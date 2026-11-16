@@ -19,3 +19,6 @@ desktop.ini
 
 # 构建产物
 dist/
+
+# 项目记忆（含本机路径）
+.workbuddy-ai/

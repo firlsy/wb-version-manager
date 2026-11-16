@@ -119,7 +119,7 @@ async function loadState() {
   state.jobs = data.jobs;
   state.cached = data.cached;
   state.guard = data.guard;
-  state.quarantine = data.quarantine;
+  state.block = data.block;
   state.dataDirs = data.dataDirs;
   state.lastInstall = data.lastInstall;
   if (!state.apps.some((a) => a.id === state.selectedAppId)) {
@@ -175,57 +175,62 @@ function renderShell() {
 }
 
 function renderBlock() {
-  const q = state.quarantine;
-  if (!q) return;
+  const b = state.block;
+  if (!b) return;
   const badge = $('#blockBadge');
   const body = $('#blockBody');
   const actions = $('#blockActions');
-  const staged = q.staged || { kind: 'none' };
+  const rows = Object.values(b.apps || {});
+  const onCount = rows.filter((a) => a.enabled).length;
 
-  if (q.locked) {
-    badge.innerHTML = '<span class="badge green">已拦截</span>';
-    actions.innerHTML = `<button class="btn btn-sm" data-act="block-off">解除拦截</button>`;
-    body.innerHTML = `
-      <div class="block-state on">
-        <div class="block-icon">${svgIcon('lock')}</div>
-        <div class="block-main">
-          <b>自动更新已被拦截</b>
-          <p>更新器缓存位置已放置同名占位目录，客户端无法把新安装包落盘；已安装的客户端不受影响。</p>
-          <p class="mono">${esc(q.updaterDir)}\\installer.exe</p>
-        </div>
-        <div class="block-side"><span class="badge gray">隔离区 ${q.vault.length} 个包</span></div>
-      </div>`;
-    return;
-  }
+  badge.innerHTML = onCount
+    ? `<span class="badge green">已锁定 ${onCount}/${rows.length}</span>`
+    : '<span class="badge gray">未锁定</span>';
+  actions.innerHTML = '';
 
-  if (staged.kind === 'file') {
-    badge.innerHTML = '<span class="badge amber">有待安装更新</span>';
-    actions.innerHTML = `<button class="btn btn-sm btn-primary" data-act="block-on">拦截并隔离</button>`;
-    body.innerHTML = `
-      <div class="block-state warn">
-        <div class="block-icon">${svgIcon('alert')}</div>
-        <div class="block-main">
-          <b>发现已下载、等待安装的更新包</b>
-          <p>${esc(staged.sizeText)} · ${new Date(staged.mtime).toLocaleString('zh-CN', { hour12: false })} · 下次启动客户端时会静默安装</p>
-          <p class="mono">${esc(q.updaterDir)}\\installer.exe</p>
-        </div>
-        <div class="block-side"><span class="badge gray">隔离区 ${q.vault.length} 个包</span></div>
-      </div>`;
-    return;
-  }
+  const head = `
+    <p class="block-note">
+      客户端会把新版本下载到 <span class="mono">%LOCALAPPDATA%\\Temp\\workbuddy-update-*</span>，下次启动时静默安装。
+      锁定后三层同时生效：<b>关掉启动强制更新</b> → <b>回收已下载的安装包</b> → <b>拒绝写入缓存目录</b>。
+    </p>`;
 
-  badge.innerHTML = '<span class="badge gray">未拦截</span>';
-  actions.innerHTML = `<button class="btn btn-sm" data-act="block-on">开启拦截</button>`;
-  body.innerHTML = `
-    <div class="block-state">
-      <div class="block-icon">${svgIcon('unlock')}</div>
-      <div class="block-main">
-        <b>当前没有待安装的更新</b>
-        <p>开启拦截后，客户端后续下载的更新包会被隔离，直到你主动解除。</p>
-        <p class="mono">${esc(q.updaterDir)}</p>
-      </div>
-      <div class="block-side"><span class="badge gray">隔离区 ${q.vault.length} 个包</span></div>
-    </div>`;
+  body.innerHTML =
+    head +
+    rows
+      .map((a) => {
+        const cfgOff = a.config?.configValue === false || a.config?.settingsValue === false;
+        const cache = a.cache || {};
+        const fail = a.failure || {};
+        const stateClass = a.enabled ? 'on' : cache.count ? 'warn' : '';
+        const btn = a.enabled
+          ? `<button class="btn btn-sm" data-act="block-off" data-app="${a.appId}">解除锁定</button>`
+          : `<button class="btn btn-sm btn-primary" data-act="block-on" data-app="${a.appId}">锁定并拦截</button>`;
+        const cacheText = cache.count
+          ? `${cache.count} 个包 · ${cache.totalText}`
+          : '无待安装包';
+        const writeText = cache.blocked ? '写入已拒绝' : '可写入';
+        return `
+        <div class="block-app ${stateClass}">
+          <div class="block-app-head">
+            <b>${esc(a.name)}</b>
+            <span class="edition">${esc(a.edition || '')}</span>
+            ${a.enabled ? '<span class="badge green">已锁定</span>' : '<span class="badge gray">未锁定</span>'}
+            ${fail.exists ? `<span class="badge amber">安装失败 ${fail.count} 次</span>` : ''}
+            <span class="spacer"></span>
+            ${btn}
+          </div>
+          <div class="block-meta">
+            <div class="block-meta-item"><span class="k">启动强制更新</span><span class="v ${cfgOff ? 'ok' : 'warn'}">${cfgOff ? '已关闭' : '未设置'}</span></div>
+            <div class="block-meta-item"><span class="k">更新缓存</span><span class="v ${cache.count ? 'warn' : ''}">${cacheText}</span></div>
+            <div class="block-meta-item"><span class="k">缓存写入</span><span class="v ${cache.blocked ? 'ok' : ''}">${writeText}</span></div>
+            <div class="block-meta-item"><span class="k">失败计数</span><span class="v ${fail.exists ? 'warn' : 'ok'}">${fail.exists ? `${fail.count} 次 · ${esc(fail.code || '未知')}` : '已清除'}</span></div>
+          </div>
+          <div class="block-meta">
+            <div class="block-meta-item"><span class="k">缓存目录</span><span class="mono">${esc((cache.dirs || []).map((d) => d.path).join('  |  '))}</span></div>
+          </div>
+        </div>`;
+      })
+      .join('');
 }
 
 function renderHeroStats() {
@@ -606,7 +611,7 @@ async function toggleLock(version, appId = state.selectedAppId) {
     if (res.block?.error) {
       toast(`已锁定 ${version}，但拦截更新失败：${res.block.error}`, 'err');
     } else {
-      toast(`已锁定 ${app.name} 到 ${version}，自动更新已拦截`, 'ok');
+      toast(`已锁定 ${app.name} 到 ${version}，启动更新已关闭、缓存已拦截`, 'ok');
     }
   }
   await reloadAll();
@@ -955,10 +960,17 @@ function bindEvents() {
         }         else if (name === 'reveal') {
           await apiPost('/api/reveal', { path });
         } else if (name === 'block-on' || name === 'block-off') {
-          const res = await apiPost('/api/block', { enabled: name === 'block-on', restore: true });
-          state.quarantine = res.quarantine;
+          const target = appId || state.selectedAppId;
+          const res = await apiPost('/api/block', { enabled: name === 'block-on', appId: target });
+          const fresh = await apiGet('/api/state');
+          state.block = fresh.block;
           renderBlock();
-          toast(name === 'block-on' ? '已拦截自动更新，更新包已移入隔离区' : '已解除拦截，更新包已恢复', 'ok');
+          if (name === 'block-on') {
+            const n = res.moved?.length || 0;
+            toast(n ? `已锁定，${n} 个已下载的安装包移入本地仓库` : '已锁定，自动更新已关闭', 'ok');
+          } else {
+            toast('已解除锁定，自动更新恢复', 'ok');
+          }
         } else if (name === 'settings') {
           await loadState();
           settingsModal();
@@ -1067,7 +1079,7 @@ function bindEvents() {
         const before = state.apps.map((a) => `${a.id}:${a.install?.version}:${a.lock?.version}:${a.drift}`).join('|');
         state.apps = data.apps;
         state.guard = data.guard;
-        state.quarantine = data.quarantine;
+        state.block = data.block;
         state.cached = data.cached;
         state.dataDirs = data.dataDirs;
         const after = state.apps.map((a) => `${a.id}:${a.install?.version}:${a.lock?.version}:${a.drift}`).join('|');

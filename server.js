@@ -10,7 +10,7 @@ import { loadCatalog, catalogMeta, refreshCatalog, mergeLocalVersions } from './
 import { listCached, startDownload, listJobs, cancelJob, findCached } from './lib/downloads.js';
 import { installVersion, killApp, dataSnapshot } from './lib/install.js';
 import { setLock, clearLock, guardStatus, setGuard, runGuardNow } from './lib/lock.js';
-import { quarantineStatus, enableBlock, disableBlock } from './lib/quarantine.js';
+import { blockStatus, enableBlock, disableBlock } from './lib/block.js';
 import { PLATFORM_LABELS, countNotes } from './lib/parse.js';
 
 const PUBLIC_DIR = path.join(ROOT, 'public');
@@ -100,7 +100,7 @@ async function buildState() {
     cached,
     settings: state.settings,
     guard: await guardStatus(),
-    quarantine: await quarantineStatus(),
+    block: await blockStatus(),
     lastInstall: state.lastInstall,
     guardEvents: (state.guardEvents || []).slice(-5),
     dataDirs: await dataSnapshot(),
@@ -211,7 +211,7 @@ async function handler(req, res) {
       let block = null;
       if (body.blockUpdates !== false) {
         try {
-          block = await enableBlock();
+          block = await enableBlock(body.appId);
         } catch (err) {
           block = { error: err.message };
         }
@@ -221,9 +221,10 @@ async function handler(req, res) {
 
     if (p === '/api/block' && req.method === 'POST') {
       const body = await readBody(req);
+      if (!appById(body.appId)) return json(res, 400, { error: '未知应用' });
       try {
-        const result = body.enabled ? await enableBlock() : await disableBlock({ restore: body.restore !== false });
-        return json(res, 200, { ok: true, quarantine: result });
+        const result = body.enabled ? await enableBlock(body.appId) : await disableBlock(body.appId);
+        return json(res, 200, { ok: true, ...result });
       } catch (err) {
         return json(res, 400, { error: err.message });
       }
@@ -232,7 +233,13 @@ async function handler(req, res) {
     if (p.startsWith('/api/lock/') && req.method === 'DELETE') {
       const appId = p.split('/').pop();
       await clearLock(appId);
-      return json(res, 200, { ok: true });
+      let block = null;
+      try {
+        block = await disableBlock(appId);
+      } catch (err) {
+        block = { error: err.message };
+      }
+      return json(res, 200, { ok: true, block });
     }
 
     if (p === '/api/download' && req.method === 'POST') {

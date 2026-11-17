@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
@@ -118,7 +119,8 @@ namespace WbVm
 
         private static bool IsCliCommand(string a)
         {
-            return a == "--status" || a == "--lock" || a == "--unlock" || a == "--help" || a == "-h" || a == "/?";
+            return a == "--status" || a == "--lock" || a == "--unlock" || a == "--clear-cache"
+                || a == "--help" || a == "-h" || a == "/?";
         }
 
         private static void RunCli(string[] args)
@@ -137,7 +139,15 @@ namespace WbVm
                     w.WriteLine("  --status               查看两款客户端的版本与锁定状态");
                     w.WriteLine("  --lock   [appId]       锁定（appId: workbuddy | workbuddyai，默认 workbuddy）");
                     w.WriteLine("  --unlock [appId]       解除锁定");
+                    w.WriteLine("  --clear-cache appId    清理该客户端无用的安装包缓存（只动一个，不影响另一个）");
                     w.WriteLine("  不带参数               打开图形界面");
+                    return;
+                }
+
+                if (cmd == "--clear-cache" && args.Length < 2)
+                {
+                    w.WriteLine("请指定要清理的客户端：--clear-cache workbuddy | workbuddyai");
+                    Environment.ExitCode = 2;
                     return;
                 }
 
@@ -188,6 +198,54 @@ namespace WbVm
                     StateStore.Instance.ClearLock(appId);
                     w.WriteLine("完成。配置已还原，缓存目录恢复可写。");
                     PrintOne(w, appId);
+                    return;
+                }
+
+                if (cmd == "--clear-cache")
+                {
+                    InstallInfo info = Detector.Detect(appId, StateStore.Instance.CustomPath(appId));
+                    string installed = info.Found ? info.Version : "";
+                    string locked = StateStore.Instance.LockedVersion(appId);
+                    List<CachedFile> useless = Downloads.ListUseless(appId, installed, locked);
+                    List<FileInfo> parts = Downloads.ListPartFiles(appId);
+
+                    long bytes = 0;
+                    foreach (CachedFile f in useless) bytes += f.Size;
+                    foreach (FileInfo p in parts) bytes += p.Length;
+
+                    w.WriteLine("清理 " + appId + " 缓存（保留当前版本 " +
+                                (installed == "" ? "未知" : installed) + "、锁定版本 " +
+                                (locked == "" ? "无" : locked) + "）");
+                    if (useless.Count == 0 && parts.Count == 0)
+                    {
+                        w.WriteLine("没有需要清理的缓存。");
+                        return;
+                    }
+
+                    int removed = 0;
+                    long freed = 0;
+                    foreach (CachedFile f in useless)
+                    {
+                        try
+                        {
+                            File.Delete(f.FullPath);
+                            removed++; freed += f.Size;
+                            w.WriteLine("  删除 " + f.FileName + "  " + f.SizeText);
+                        }
+                        catch (Exception ex) { w.WriteLine("  跳过 " + f.FileName + "：" + ex.Message); }
+                    }
+                    foreach (FileInfo p in parts)
+                    {
+                        try
+                        {
+                            long len = p.Length;
+                            p.Delete();
+                            removed++; freed += len;
+                            w.WriteLine("  删除 " + p.Name + "  " + Fmt.Bytes(len));
+                        }
+                        catch (Exception ex) { w.WriteLine("  跳过 " + p.Name + "：" + ex.Message); }
+                    }
+                    w.WriteLine("完成：删除 " + removed + " 个文件，释放 " + Fmt.Bytes(freed) + "。");
                 }
             }
             catch (Exception ex)

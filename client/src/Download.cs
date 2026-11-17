@@ -68,37 +68,103 @@ namespace WbVm
             return "";
         }
 
+        /// <summary>客户端自己的缓存目录 + 同目录网页版的缓存目录</summary>
+        public static List<string> AllStoreRoots()
+        {
+            List<string> list = new List<string>();
+            list.Add(Paths.StoreRoot);
+            foreach (string s in Paths.WebStoreRoots())
+            {
+                bool dup = false;
+                foreach (string x in list)
+                    if (string.Equals(x, s, StringComparison.OrdinalIgnoreCase)) dup = true;
+                if (!dup) list.Add(s);
+            }
+            return list;
+        }
+
         public static List<CachedFile> ListCached()
         {
+            return ListCached(null);
+        }
+
+        /// <summary>列出缓存安装包；appId 为空时返回全部客户端的</summary>
+        public static List<CachedFile> ListCached(string appId)
+        {
             List<CachedFile> list = new List<CachedFile>();
-            try
+            foreach (string root in AllStoreRoots())
             {
-                if (!Directory.Exists(Paths.StoreRoot)) return list;
-                foreach (string appDir in Directory.GetDirectories(Paths.StoreRoot))
+                try
                 {
-                    string appId = Path.GetFileName(appDir);
-                    foreach (string full in Directory.GetFiles(appDir))
+                    if (!Directory.Exists(root)) continue;
+                    foreach (string appDir in Directory.GetDirectories(root))
                     {
-                        string ext = Path.GetExtension(full).ToLowerInvariant();
-                        if (ext != ".exe" && ext != ".dmg" && ext != ".zip" && ext != ".appimage") continue;
-                        FileInfo fi = new FileInfo(full);
-                        CachedFile f = new CachedFile();
-                        f.AppId = appId;
-                        f.FileName = fi.Name;
-                        f.FullPath = full;
-                        f.Size = fi.Length;
-                        f.MTime = fi.LastWriteTimeUtc;
-                        Match m = VersionRe.Match(fi.Name);
-                        f.Version = m.Success ? m.Groups[1].Value : "";
-                        f.VersionShort = Fmt.ShortVersion(f.Version);
-                        f.Build = f.Version;
-                        f.Platform = PlatformFromName(fi.Name);
-                        list.Add(f);
+                        string dirAppId = Path.GetFileName(appDir);
+                        if (!string.IsNullOrEmpty(appId) && !string.Equals(dirAppId, appId, StringComparison.OrdinalIgnoreCase))
+                            continue;
+                        foreach (string full in Directory.GetFiles(appDir))
+                        {
+                            string ext = Path.GetExtension(full).ToLowerInvariant();
+                            if (ext != ".exe" && ext != ".dmg" && ext != ".zip" && ext != ".appimage") continue;
+                            FileInfo fi = new FileInfo(full);
+                            CachedFile f = new CachedFile();
+                            f.AppId = dirAppId;
+                            f.FileName = fi.Name;
+                            f.FullPath = full;
+                            f.Size = fi.Length;
+                            f.MTime = fi.LastWriteTimeUtc;
+                            Match m = VersionRe.Match(fi.Name);
+                            f.Version = m.Success ? m.Groups[1].Value : "";
+                            f.VersionShort = Fmt.ShortVersion(f.Version);
+                            f.Build = f.Version;
+                            f.Platform = PlatformFromName(fi.Name);
+                            list.Add(f);
+                        }
                     }
                 }
+                catch { }
             }
-            catch { }
             list.Sort(delegate(CachedFile a, CachedFile b) { return b.MTime.CompareTo(a.MTime); });
+            return list;
+        }
+
+        /// <summary>未完成的下载碎片（*.part）</summary>
+        public static List<FileInfo> ListPartFiles(string appId)
+        {
+            List<FileInfo> list = new List<FileInfo>();
+            foreach (string root in AllStoreRoots())
+            {
+                try
+                {
+                    string dir = Path.Combine(root, appId);
+                    if (!Directory.Exists(dir)) continue;
+                    foreach (string full in Directory.GetFiles(dir, "*.part"))
+                    {
+                        try { list.Add(new FileInfo(full)); } catch { }
+                    }
+                }
+                catch { }
+            }
+            return list;
+        }
+
+        public static bool MatchesVersion(CachedFile f, string version)
+        {
+            if (string.IsNullOrEmpty(version)) return false;
+            if (f.VersionShort == version || f.Version == version) return true;
+            return f.Version.Length > 0 && f.Version.StartsWith(version + ".", StringComparison.Ordinal);
+        }
+
+        /// <summary>既不是当前安装版本、也不是锁定版本的缓存安装包</summary>
+        public static List<CachedFile> ListUseless(string appId, string installed, string locked)
+        {
+            List<CachedFile> list = new List<CachedFile>();
+            foreach (CachedFile f in ListCached(appId))
+            {
+                if (MatchesVersion(f, installed)) continue;
+                if (MatchesVersion(f, locked)) continue;
+                list.Add(f);
+            }
             return list;
         }
 

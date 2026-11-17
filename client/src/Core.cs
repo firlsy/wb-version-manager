@@ -84,8 +84,39 @@ namespace WbVm
             return Path.Combine(Local, "wb-version-manager");
         }
 
-        public static string SlugOf(string name)
+        /// <summary>
+        /// 网页版的缓存目录：客户端和网页版放在同一个目录（发行包就是这种结构）时共用缓存，
+        /// 单独一个 exe 放别处时这里返回空。
+        /// </summary>
+        public static List<string> WebStoreRoots()
         {
+            List<string> list = new List<string>();
+            try
+            {
+                string exeDir = AppDomain.CurrentDomain.BaseDirectory.TrimEnd('\\');
+                if (string.IsNullOrEmpty(exeDir)) return list;
+                string[] candidates = new string[]
+                {
+                    exeDir,
+                    Path.GetDirectoryName(exeDir)
+                };
+                foreach (string dir in candidates)
+                {
+                    if (string.IsNullOrEmpty(dir)) continue;
+                    if (!File.Exists(Path.Combine(dir, "server.js"))) continue;
+                    string store = Path.Combine(dir, "store");
+                    if (!Directory.Exists(store)) continue;
+                    bool dup = false;
+                    foreach (string s in list)
+                        if (string.Equals(s, store, StringComparison.OrdinalIgnoreCase)) dup = true;
+                    if (!dup) list.Add(store);
+                }
+            }
+            catch { }
+            return list;
+        }
+
+        public static string SlugOf(string name)        {
             StringBuilder sb = new StringBuilder();
             string lower = (name ?? "").ToLowerInvariant();
             for (int i = 0; i < lower.Length; i++)

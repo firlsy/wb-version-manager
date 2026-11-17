@@ -23,8 +23,8 @@ WorkBuddy 桌面端会在后台把完整安装包下载到用户目录，下次�
 | 文件 | 说明 |
 | --- | --- |
 | `WorkBuddyVersionManager.exe` | **C# 桌面客户端**，单文件 226 KB，双击即用，不需要安装任何运行时 |
-| `wb-version-manager-v1.1.1.zip` | 网页版便携包，解压后双击 `启动工具.bat`（需要 Node.js 20+） |
-| `wb-vers-manager-v1.1.1.ps1` | 独立 PowerShell CLI，单文件，不需要 Node.js |
+| `wb-version-manager-v1.2.0.zip` | 网页版便携包，解压后双击 `启动工具.bat`（需要 Node.js 20+） |
+| `wb-vers-manager-v1.2.0.ps1` | 独立 PowerShell CLI，单文件，不需要 Node.js |
 | `SHA256SUMS.txt` | 上面三个文件的校验值 |
 
 ![主界面](docs/screenshot-main.png)
@@ -39,6 +39,7 @@ WorkBuddy 桌面端会在后台把完整安装包下载到用户目录，下次�
 - **官方更新说明**：选中任意版本即显示官网更新日志原文要点，附官方原文链接。
 - **下载指定版本**：直接从官方 CDN 下载 Windows 安装包，带进度、速度与断点文件清理。
 - **导出 / 复制链接**：单条复制（三个平台），或导出全部版本的 TXT 清单；网页版还支持 CSV / Markdown / JSON。
+- **清理无用缓存**：缓存卡片按客户端分别显示、分别清理，只删掉既不是当前版本也不是锁定版本的安装包；另一个客户端完全不受影响。
 - **回退**：用官方 NSIS 静默参数安装任意历史版本；工作区、任务、技能、资料库数据不受影响。
 - **版本漂移提示**：锁定后若被其他方式升级，顶部会提示「锁定 x，当前 y」，可一键回退。
 - **可选后台守护**：注册计划任务，每 30 分钟检查一次版本漂移。
@@ -62,9 +63,10 @@ WorkBuddy 桌面端会在后台把完整安装包下载到用户目录，下次�
 也支持命令行，方便脚本化：
 
 ```powershell
-.\WorkBuddyVersionManager.exe --status          # 查看两款客户端的版本与拦截状态
-.\WorkBuddyVersionManager.exe --lock workbuddy  # 锁定（workbuddy | workbuddyai）
+.\WorkBuddyVersionManager.exe --status                # 查看两款客户端的版本与拦截状态
+.\WorkBuddyVersionManager.exe --lock workbuddy        # 锁定（workbuddy | workbuddyai）
 .\WorkBuddyVersionManager.exe --unlock workbuddy
+.\WorkBuddyVersionManager.exe --clear-cache workbuddy # 只清国内版的无用安装包缓存
 ```
 
 ### 网页版
@@ -245,6 +247,11 @@ cd client
 仓库内只包含公开的官方版本目录，不含任何本机用户名、安装路径或使用记录。运行时产生的 `data/state.json`、`store/`、`exports/` 已加入 `.gitignore`；截图脚本在保存前会把 `C:\Users\<name>` 之类的路径替换为 `<user>`。
 
 ## 更新记录
+
+**v1.2.0**
+- 缓存卡片新增「清除无用缓存」：只删既不是**当前安装版本**也不是**锁定版本**的安装包，连同未完成的 `.part` 碎片；点之前会列出将删除的文件与可释放空间。
+- 缓存按客户端分开：卡片标题显示当前选中的是哪一版，按钮只清这一版的目录，另一个客户端一个字节都不动。命令行对应 `--clear-cache workbuddy | workbuddyai`。
+- 「打开缓存目录」现在直接打开当前客户端缓存包所在目录；和网页版放在同一目录时（发行包就是这种结构），两边的缓存会一起统计。
 
 **v1.1.1**
 - 修复切换客户端后顶部徽章不刷新：`Badge` / `FlatButton` 是自绘控件，`Text` 变化时不会自动重绘，导致选中 WorkBuddy AI 后仍显示国内版的「已锁定 5.9.3 / 更新缓存 空 / 未运行」。现在文字一变就重绘。

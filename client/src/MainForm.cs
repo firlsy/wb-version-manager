@@ -49,8 +49,10 @@ namespace WbVm
         private FlatButton _dataDirBtn;
 
         private readonly Dictionary<string, AppCard> _cards = new Dictionary<string, AppCard>(StringComparer.Ordinal);
+        private Label _cacheTitle;
         private Label _cacheLabel;
         private FlatButton _openStoreBtn;
+        private FlatButton _clearCacheBtn;
 
         private Label _appTitle;
         private Label _appSub;
@@ -222,13 +224,14 @@ namespace WbVm
             cl.BackColor = Color.Transparent;
             cl.Location = new Point(16, 14);
             cacheCard.Controls.Add(cl);
+            _cacheTitle = cl;
 
             _cacheLabel = new Label();
             _cacheLabel.Font = UiFont.Small;
             _cacheLabel.ForeColor = Palette.Text2;
             _cacheLabel.BackColor = Color.Transparent;
             _cacheLabel.Location = new Point(16, 42);
-            _cacheLabel.Size = new Size(270, 64);
+            _cacheLabel.Size = new Size(278, 58);
             cacheCard.Controls.Add(_cacheLabel);
 
             _openStoreBtn = new FlatButton();
@@ -239,12 +242,23 @@ namespace WbVm
             {
                 try
                 {
-                    Directory.CreateDirectory(Paths.StoreRoot);
-                    Process.Start("explorer.exe", Paths.StoreRoot);
+                    List<CachedFile> cached = Downloads.ListCached(_selectedApp);
+                    string dir = cached.Count > 0 ? Path.GetDirectoryName(cached[0].FullPath)
+                                                  : Path.Combine(Paths.StoreRoot, _selectedApp);
+                    Directory.CreateDirectory(dir);
+                    Process.Start("explorer.exe", dir);
                 }
                 catch (Exception ex) { AppendLog("打开缓存目录失败：" + ex.Message); }
             };
             cacheCard.Controls.Add(_openStoreBtn);
+
+            _clearCacheBtn = new FlatButton();
+            _clearCacheBtn.Text = "清除无用缓存";
+            _clearCacheBtn.Size = new Size(128, 30);
+            _clearCacheBtn.Location = new Point(142, 108);
+            _clearCacheBtn.Danger = true;
+            _clearCacheBtn.Click += delegate { ClearUselessCache(); };
+            cacheCard.Controls.Add(_clearCacheBtn);
 
             /* ---------- 右侧 ---------- */
 
@@ -590,8 +604,7 @@ namespace WbVm
             }
             finally
             {
-                _busy = false;
-                UpdateActionState();
+                SetBusy(false);
             }
         }
 
@@ -617,24 +630,137 @@ namespace WbVm
 
         private void RefreshCacheSummary()
         {
-            List<CachedFile> cached = Downloads.ListCached();
+            AppDef app = Apps.ById(_selectedApp);
+            if (_cacheTitle != null) _cacheTitle.Text = "安装包缓存 · " + app.Edition;
+
+            InstallInfo info;
+            _installs.TryGetValue(_selectedApp, out info);
+            string installed = info != null && info.Found ? info.Version : "";
+            string locked = StateStore.Instance.LockedVersion(_selectedApp);
+
+            List<CachedFile> cached = Downloads.ListCached(_selectedApp);
             long total = 0;
             for (int i = 0; i < cached.Count; i++) total += cached[i].Size;
+            List<FileInfo> parts = Downloads.ListPartFiles(_selectedApp);
+            long partBytes = 0;
+            for (int i = 0; i < parts.Count; i++) partBytes += parts[i].Length;
 
             StringBuilder sb = new StringBuilder();
-            if (cached.Count == 0) sb.Append("暂无缓存的安装包。下载后会存到本地，回退时直接复用。");
+            if (cached.Count == 0 && parts.Count == 0)
+            {
+                sb.Append("暂无缓存的安装包。下载后会存到本地，回退时直接复用。");
+            }
             else
             {
-                sb.Append(cached.Count + " 个安装包 · 共 " + Fmt.Bytes(total) + "\n");
+                sb.Append(cached.Count + " 个安装包 · 共 " + Fmt.Bytes(total));
+                if (parts.Count > 0) sb.Append("，另有 " + parts.Count + " 个未完成碎片 " + Fmt.Bytes(partBytes));
+                sb.Append("\n");
                 int n = 0;
                 foreach (CachedFile f in cached)
                 {
                     if (n++ >= 2) break;
-                    sb.Append("· " + f.VersionShort + "  " + f.SizeText + "\n");
+                    bool keep = Downloads.MatchesVersion(f, installed) || Downloads.MatchesVersion(f, locked);
+                    sb.Append("· " + (string.IsNullOrEmpty(f.VersionShort) ? f.FileName : f.VersionShort) + "  " + f.SizeText);
+                    if (keep) sb.Append("（在用）");
+                    sb.Append("\n");
                 }
                 if (cached.Count > 2) sb.Append("…");
             }
             _cacheLabel.Text = sb.ToString();
+
+            List<CachedFile> useless = Downloads.ListUseless(_selectedApp, installed, locked);
+            int pending = useless.Count + parts.Count;
+            if (_clearCacheBtn != null)
+            {
+                _clearCacheBtn.Text = pending > 0 ? "清除无用缓存 " + pending : "清除无用缓存";
+                _clearCacheBtn.Enabled = pending > 0 && !_busy;
+            }
+        }
+
+        /// <summary>只清当前选中客户端的缓存，另一个客户端不受影响</summary>
+        private void ClearUselessCache()
+        {
+            if (_busy) return;
+            AppDef app = Apps.ById(_selectedApp);
+            AppDef other = Apps.ById(_selectedApp == "workbuddy" ? "workbuddyai" : "workbuddy");
+
+            InstallInfo info;
+            _installs.TryGetValue(_selectedApp, out info);
+            string installed = info != null && info.Found ? info.Version : "";
+            string locked = StateStore.Instance.LockedVersion(_selectedApp);
+
+            List<CachedFile> useless = Downloads.ListUseless(_selectedApp, installed, locked);
+            List<FileInfo> parts = Downloads.ListPartFiles(_selectedApp);
+            long bytes = 0;
+            for (int i = 0; i < useless.Count; i++) bytes += useless[i].Size;
+            for (int i = 0; i < parts.Count; i++) bytes += parts[i].Length;
+
+            if (useless.Count == 0 && parts.Count == 0)
+            {
+                MessageBox.Show(this,
+                    app.Name + " " + app.Edition + " 没有需要清理的缓存。\n\n" +
+                    "当前版本：" + (installed == "" ? "未检测到" : installed) + "\n" +
+                    "锁定版本：" + (string.IsNullOrEmpty(locked) ? "未锁定" : locked) + "\n\n" +
+                    "缓存里只剩下这两个版本要用的安装包。",
+                    "清除无用缓存", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine("将清理 " + app.Name + " " + app.Edition + " 的 " + (useless.Count + parts.Count) +
+                          " 个文件，释放 " + Fmt.Bytes(bytes) + "：");
+            sb.AppendLine();
+            for (int i = 0; i < useless.Count && i < 12; i++)
+                sb.AppendLine("· " + useless[i].FileName + "   " + useless[i].SizeText);
+            if (useless.Count > 12) sb.AppendLine("· …… 另外 " + (useless.Count - 12) + " 个");
+            for (int i = 0; i < parts.Count && i < 6; i++)
+                sb.AppendLine("· " + parts[i].Name + "   " + Fmt.Bytes(parts[i].Length) + "（未完成的下载）");
+            sb.AppendLine();
+            sb.AppendLine("保留：" + (installed == "" ? "（无当前版本）" : "当前版本 " + installed) +
+                          "、" + (string.IsNullOrEmpty(locked) ? "（未锁定）" : "锁定版本 " + locked));
+            sb.AppendLine();
+            sb.Append("只动 " + app.Edition + " 的目录，" + other.Edition + " 的缓存不受影响。确定删除？");
+
+            if (MessageBox.Show(this, sb.ToString(), "清除无用缓存",
+                    MessageBoxButtons.OKCancel, MessageBoxIcon.Warning) != DialogResult.OK)
+                return;
+
+            Cursor prev = Cursor;
+            Cursor = Cursors.WaitCursor;
+            int removed = 0;
+            long freed = 0;
+            List<string> failed = new List<string>();
+            try
+            {
+                foreach (CachedFile f in useless)
+                {
+                    try { File.Delete(f.FullPath); removed++; freed += f.Size; }
+                    catch (Exception ex) { failed.Add(f.FileName + "（" + ex.Message + "）"); }
+                }
+                foreach (FileInfo p in parts)
+                {
+                    try { long len = p.Length; p.Delete(); removed++; freed += len; }
+                    catch (Exception ex) { failed.Add(p.Name + "（" + ex.Message + "）"); }
+                }
+            }
+            finally
+            {
+                Cursor = prev;
+            }
+
+            AppendLog("清理 " + app.Name + " 缓存：删除 " + removed + " 个文件，释放 " + Fmt.Bytes(freed));
+            if (failed.Count > 0)
+            {
+                AppendLog("  有 " + failed.Count + " 个文件没删掉：" + string.Join("；", failed.ToArray()));
+                MessageBox.Show(this,
+                    "已删除 " + removed + " 个文件，释放 " + Fmt.Bytes(freed) + "。\n\n" +
+                    "还有 " + failed.Count + " 个没删掉，通常是文件正被占用：\n" +
+                    string.Join("\n", failed.ToArray()),
+                    "清除无用缓存", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+
+            RefreshCacheSummary();
+            FillGrid();
         }
 
         private void RefreshHeader()
@@ -650,6 +776,7 @@ namespace WbVm
             _selectedApp = appId;
             foreach (KeyValuePair<string, AppCard> kv in _cards) kv.Value.Active = kv.Key == appId;
             FillGrid();
+            RefreshCacheSummary();
         }
 
         /// <summary>开发用：截图时指定要展示的客户端</summary>
@@ -1143,6 +1270,7 @@ namespace WbVm
         {
             _busy = busy;
             UpdateActionState();
+            if (_clearCacheBtn != null) RefreshCacheSummary();
         }
 
         private void AppendLog(string line)

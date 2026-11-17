@@ -122,7 +122,7 @@ namespace WbVm
         private static bool IsCliCommand(string a)
         {
             return a == "--status" || a == "--lock" || a == "--unlock" || a == "--clear-cache"
-                || a == "--help" || a == "-h" || a == "/?";
+                || a == "--links" || a == "--refresh" || a == "--help" || a == "-h" || a == "/?";
         }
 
         private static void RunCli(string[] args)
@@ -142,6 +142,8 @@ namespace WbVm
                     w.WriteLine("  --lock   [appId]       锁定（appId: workbuddy | workbuddyai，默认 workbuddy）");
                     w.WriteLine("  --unlock [appId]       解除锁定");
                     w.WriteLine("  --clear-cache appId    清理该客户端无用的安装包缓存（只动一个，不影响另一个）");
+                    w.WriteLine("  --links  [appId]       列出该客户端各版本的安装包链接");
+                    w.WriteLine("  --refresh              联网刷新版本目录（含国际版通道）");
                     w.WriteLine("  不带参数               打开图形界面");
                     return;
                 }
@@ -158,6 +160,21 @@ namespace WbVm
                 if (cmd == "--status")
                 {
                     PrintStatus(w);
+                    return;
+                }
+
+                if (cmd == "--refresh")
+                {
+                    Catalog cat = LoadCatalogForCli();
+                    w.WriteLine("刷新版本目录（国内版 + 国际版）…");
+                    Catalog.RefreshReport rep = cat.RefreshAsync(null).Result;
+                    foreach (string warn in rep.Warnings) w.WriteLine("  警告：" + warn);
+                    if (rep.Added.Count > 0) w.WriteLine("  新增版本：" + string.Join("、", rep.Added.ToArray()));
+                    if (rep.UpdatedNotes.Count > 0) w.WriteLine("  补全说明：" + string.Join("、", rep.UpdatedNotes.ToArray()));
+                    w.WriteLine("  国内版最新：" + (rep.LatestVersion == "" ? "未知" : rep.LatestVersion));
+                    w.WriteLine("  国际版最新：" + (rep.IntlVersion == "" ? "未知" : rep.IntlVersion) +
+                                (rep.IntlNew ? "（新记录安装包地址）" : ""));
+                    w.WriteLine("完成：共 " + rep.Total + " 个版本，已写入 " + Paths.Display(Path.Combine(Paths.DataRoot, "catalog.json")));
                     return;
                 }
 
@@ -203,8 +220,28 @@ namespace WbVm
                     return;
                 }
 
+                if (cmd == "--links")
+                {
+                    Catalog cat = LoadCatalogForCli();
+                    AppDef app = Apps.ById(appId);
+                    string latest = cat.LatestVersionFor(appId);
+                    w.WriteLine("[" + app.Name + " " + app.Edition + "]  最新 " + (latest == "" ? "未知" : latest) +
+                                "  共 " + cat.Releases.Count + " 个版本");
+                    int with = 0, without = 0;
+                    foreach (Release rel in cat.Releases)
+                    {
+                        PackageInfo p = rel.PackageFor(appId);
+                        if (p == null) { without++; continue; }
+                        with++;
+                        w.WriteLine("  " + rel.Version.PadRight(9) + p.Url);
+                    }
+                    w.WriteLine("有官方包 " + with + " 个，无官方包 " + without + " 个。");
+                    return;
+                }
+
                 if (cmd == "--clear-cache")
                 {
+                    LoadCatalogForCli(); // 让「错版包」判断用上磁盘目录
                     InstallInfo info = Detector.Detect(appId, StateStore.Instance.CustomPath(appId));
                     string installed = info.Found ? info.Version : "";
                     string locked = StateStore.Instance.LockedVersion(appId);
@@ -255,6 +292,18 @@ namespace WbVm
                 w.WriteLine("出错：" + ex.Message);
                 Environment.ExitCode = 1;
             }
+        }
+
+        private static Catalog LoadCatalogForCli()
+        {
+            Catalog cat = Catalog.Current;
+            string cachedFile = Path.Combine(Paths.DataRoot, "catalog.json");
+            if (File.Exists(cachedFile))
+            {
+                Catalog disk = Catalog.LoadFromFile(cachedFile);
+                if (disk.Releases.Count > 0) cat = disk;
+            }
+            return cat;
         }
 
         private static void PrintStatus(StreamWriter w)

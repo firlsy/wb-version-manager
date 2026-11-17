@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Net;
+using System.Net.Http;
 using System.Text;
 
 namespace WbVm
@@ -15,8 +17,13 @@ namespace WbVm
         public string Process;
         public string Endpoint;
         public string Accent;
+        /// <summary>官方更新通道基址（不含 version 参数）</summary>
+        public string FeedBase;
+        /// <summary>官方是否公开发布历史版本安装包</summary>
+        public bool PublishHistory;
 
-        public AppDef(string id, string name, string edition, string exe, string processName, string endpoint, string accent)
+        public AppDef(string id, string name, string edition, string exe, string processName, string endpoint, string accent,
+            string feedBase, bool publishHistory)
         {
             Id = id;
             Name = name;
@@ -25,6 +32,8 @@ namespace WbVm
             Process = processName;
             Endpoint = endpoint;
             Accent = accent;
+            FeedBase = feedBase;
+            PublishHistory = publishHistory;
         }
     }
 
@@ -32,8 +41,10 @@ namespace WbVm
     {
         public static readonly AppDef[] All = new AppDef[]
         {
-            new AppDef("workbuddy", "WorkBuddy", "国内版", "WorkBuddy.exe", "WorkBuddy", "www.workbuddy.cn", "#2f6bff"),
-            new AppDef("workbuddyai", "WorkBuddy AI", "国际版", "WorkBuddyAI.exe", "WorkBuddyAI", "www.workbuddy.ai", "#7c4dff")
+            new AppDef("workbuddy", "WorkBuddy", "国内版", "WorkBuddy.exe", "WorkBuddy", "www.workbuddy.cn", "#2f6bff",
+                "https://copilot.tencent.com/v2/update?platform=workbuddy-win32-x64-user", true),
+            new AppDef("workbuddyai", "WorkBuddy AI", "国际版", "WorkBuddyAI.exe", "WorkBuddyAI", "www.workbuddy.ai", "#7c4dff",
+                "https://www.workbuddy.ai/v2/update?platform=workbuddy-win32-x64-user", false)
         };
 
         public static AppDef ById(string id)
@@ -182,9 +193,62 @@ namespace WbVm
         }
     }
 
-    public static class Fmt
+    /// <summary>
+    /// 代理解析：优先 HTTP(S)_PROXY 环境变量，其次系统（IE/WinINET）设置。
+    /// 公司内网、开发机常见只配环境变量，.NET 默认读不到。
+    /// </summary>
+    public static class Net
     {
-        public static string Bytes(long n)
+        private static IWebProxy _cached;
+        private static bool _resolved;
+
+        static Net()
+        {
+            // .NET Framework 默认可能只协商到 TLS 1.0，官方站点要求 1.2，
+            // 不显式打开就会报「未能创建 SSL/TLS 安全通道」
+            try
+            {
+                ServicePointManager.SecurityProtocol |= (SecurityProtocolType)(192 | 768 | 3072); // Tls | Tls11 | Tls12
+            }
+            catch { }
+            try { ServicePointManager.Expect100Continue = false; } catch { }
+        }
+
+        public static IWebProxy Proxy()
+        {
+            if (_resolved) return _cached;
+            _resolved = true;
+
+            string[] keys = new string[] { "HTTPS_PROXY", "https_proxy", "HTTP_PROXY", "http_proxy", "ALL_PROXY", "all_proxy" };
+            foreach (string key in keys)
+            {
+                string value = Environment.GetEnvironmentVariable(key);
+                if (string.IsNullOrEmpty(value)) continue;
+                try
+                {
+                    _cached = new WebProxy(value.Trim());
+                    return _cached;
+                }
+                catch { }
+            }
+
+            try { _cached = WebRequest.DefaultWebProxy; }
+            catch { _cached = null; }
+            return _cached;
+        }
+
+        public static HttpClientHandler NewHandler()
+        {
+            HttpClientHandler h = new HttpClientHandler();
+            h.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
+            IWebProxy p = Proxy();
+            if (p != null) h.Proxy = p;
+            return h;
+        }
+    }
+
+    public static class Fmt
+    {        public static string Bytes(long n)
         {
             if (n <= 0) return "0 B";
             string[] units = new string[] { "B", "KB", "MB", "GB" };

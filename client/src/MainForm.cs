@@ -40,6 +40,8 @@ namespace WbVm
         private Catalog _catalog;
         private readonly Dictionary<string, InstallInfo> _installs = new Dictionary<string, InstallInfo>(StringComparer.Ordinal);
         private readonly Dictionary<string, BlockStatus> _blocks = new Dictionary<string, BlockStatus>(StringComparer.Ordinal);
+        /// <summary>当前客户端已缓存的版本短号，FillGrid 时算一次，别处复用</summary>
+        private readonly HashSet<string> _cachedVersions = new HashSet<string>(StringComparer.Ordinal);
         private string _selectedApp = "workbuddy";
         private CancellationTokenSource _downloadCts;
         private bool _busy;
@@ -81,6 +83,8 @@ namespace WbVm
         public MainForm()
         {
             _catalog = Catalog.Current;
+            // 缓存包归属哪一版要靠实时目录来判断，这里把引用挂过去
+            Downloads.CatalogProvider = delegate { return _catalog; };
             BuildUi();
             Load += delegate { TryLoadDiskCatalog(); };
             Shown += async delegate { FitGuideCard(); await ReloadAll(true); };
@@ -100,7 +104,8 @@ namespace WbVm
                 string cache = Path.Combine(Paths.DataRoot, "catalog.json");
                 if (!File.Exists(cache)) return;
                 Catalog disk = Catalog.LoadFromFile(cache);
-                if (disk.Releases.Count > _catalog.Releases.Count) _catalog = disk;
+                // 条数一样时也优先用磁盘版：里面带着用户自己刷新出来的国际版记录和更新说明
+                if (disk.Releases.Count >= _catalog.Releases.Count) _catalog = disk;
             }
             catch { }
         }
@@ -667,12 +672,16 @@ namespace WbVm
 
             bool found = info != null && info.Found;
             bool blocked = st != null && st.Enabled;
-            bool hasRelease = SelectedRelease() != null;
+            Release rel = SelectedRelease();
+            bool hasRelease = rel != null;
+            // 官方有包、或本机缓存里有包，才算「能装」
+            bool hasSource = rel != null && (rel.HasPackageFor(_selectedApp) || _cachedVersions.Contains(rel.Version));
+            bool hasRemote = rel != null && rel.HasPackageFor(_selectedApp);
 
             _btnLock.Enabled = found && !blocked && !_busy;
             _btnUnlock.Enabled = blocked && !_busy;
-            _btnDownload.Enabled = hasRelease && !_busy && _downloadCts == null;
-            _btnRollback.Enabled = found && hasRelease && !_busy;
+            _btnDownload.Enabled = hasRemote && !_busy && _downloadCts == null;
+            _btnRollback.Enabled = found && hasRelease && hasSource && !_busy;
             _btnCopy.Enabled = hasRelease && !_busy;
             _btnExport.Enabled = !_busy;
             _refreshBtn.Enabled = !_busy;
@@ -692,11 +701,11 @@ namespace WbVm
         {
             StringBuilder sb = new StringBuilder();
             sb.Append("1  左侧点选要回退的客户端\n");
-            sb.Append("2  点「解除锁定」放开版本\n");
-            sb.Append("3  版本清单里选中目标旧版本\n");
-            sb.Append("4  点「下载选中版本」等下载完成\n");
-            sb.Append("5  点「回退安装」，UAC 点「是」\n");
-            sb.Append("6  装完自动重开，再点「锁定当前版本」\n");
+            sb.Append("2  版本清单里选中目标旧版本\n");
+            sb.Append("3  点「下载选中版本」等下载完成\n");
+            sb.Append("4  点「回退安装」：自动解锁 + 打开资源管理器\n");
+            sb.Append("5  双击选中的安装包，按向导装完\n");
+            sb.Append("6  回工具点「锁定当前版本」\n");
             return sb.ToString();
         }
 
@@ -708,42 +717,47 @@ namespace WbVm
             sb.AppendLine("· 数据不会丢。工作区、任务、历史会话、技能、资料库都放在");
             sb.AppendLine("  %USERPROFILE%\\.workbuddy 和 %LOCALAPPDATA% 下面，跟客户端版本无关，");
             sb.AppendLine("  回退只是把程序目录换回旧版本，不会碰这些数据。");
-            sb.AppendLine("· 回退会改动安装目录（通常是 D:\\Program Files\\WorkBuddy 或");
-            sb.AppendLine("  D:\\Program Files\\WorkBuddyAI），需要管理员权限，会弹 UAC。");
+            sb.AppendLine("· 回退要靠官方安装包。工具只负责把环境和安装包准备好，真正的安装");
+            sb.AppendLine("  由你双击运行安装包完成，安装器会自己识别原安装目录。");
             sb.AppendLine();
             sb.AppendLine("步骤");
             sb.AppendLine();
             sb.AppendLine("1. 在左侧点选要回退的客户端：WorkBuddy 国内版 或 WorkBuddy AI 国际版。");
             sb.AppendLine("   两款互不影响，一次只处理一个。");
             sb.AppendLine();
-            sb.AppendLine("2. 点「解除锁定」。这一步会把启动强制更新开关还原、把缓存目录恢复可写，");
-            sb.AppendLine("   否则安装器可能写不进去。");
+            sb.AppendLine("2. 在中间的版本清单里找到目标旧版本。看「安装包」这一列：");
+            sb.AppendLine("   显示大小或「官方包」= 能下载；显示「本地包」= 官方没提供，");
+            sb.AppendLine("   但本机缓存里已经有了；显示「—」= 既没官方地址也没缓存，装不了。");
             sb.AppendLine();
-            sb.AppendLine("3. 在中间的版本清单里找到目标旧版本。看「本机」这一列：");
-            sb.AppendLine("   标「当前版本」的是现在装着的，标「已缓存」的说明安装包已经在本地。");
-            sb.AppendLine();
-            sb.AppendLine("4. 点「下载选中版本」。已经缓存过的会直接复用，不会重复下载。");
+            sb.AppendLine("3. 点「下载选中版本」。已经缓存过的会直接复用，不会重复下载。");
             sb.AppendLine("   下载带进度和速度，中断了会留 .part 文件，下次重新下即可。");
             sb.AppendLine();
-            sb.AppendLine("5. 点「回退安装」。确认框里核对「从 x → y」的版本号，没问题再点确定。");
-            sb.AppendLine("   工具会先校验安装包的 SHA-256，对不上会中止，不会装半个包。");
+            sb.AppendLine("4. 点「回退安装」。工具在这一步做四件事，不需要你手动操作：");
+            sb.AppendLine("   · 结束正在运行的客户端");
+            sb.AppendLine("   · 自动解除锁定：还原启动更新开关、放开缓存目录写入");
+            sb.AppendLine("   · 清除安装失败熔断记录（原文件备份到 block-backup）");
+            sb.AppendLine("   · 回收客户端更新缓存里待装的包，免得装完又被顶回新版本");
+            sb.AppendLine("   做完之后打开资源管理器，把安装包选中给你。");
             sb.AppendLine();
-            sb.AppendLine("6. UAC 弹窗点「是」。安装器用的是官方 NSIS 静默参数：");
-            sb.AppendLine("   /S --updated /UPDATE=1 /D=<原安装目录>");
-            sb.AppendLine("   也就是原地覆盖，不换目录、不新建配置。");
+            sb.AppendLine("5. 弹出「可以开始安装了」对话框时，点「是」表示装完就回来。");
+            sb.AppendLine("   安装包在资源管理器里已经选中，双击它开始安装。");
             sb.AppendLine();
-            sb.AppendLine("7. 等进度跑完。工具会自动关掉正在运行的客户端，安装完再把它拉起来；");
-            sb.AppendLine("   装完最多等 60 秒，工具会重新读一次版本号确认已经变了。");
+            sb.AppendLine("6. 安装向导里按默认走。安装器自己识别原安装目录，不用你指定路径。");
+            sb.AppendLine("   弹出 UAC 就点「是」；提示目录被占用就先确认客户端已经退出。");
             sb.AppendLine();
-            sb.AppendLine("8. 回到工具点「锁定当前版本」。这一步别省：不锁定的话，客户端下次启动");
+            sb.AppendLine("7. 装完回到工具，看左侧卡片版本号是不是已经变成目标版本。");
+            sb.AppendLine("   第 5 步点了「是」的话，工具会自动重新检测并重新锁定，这步可跳过。");
+            sb.AppendLine();
+            sb.AppendLine("8. 点「锁定当前版本」。这一步别省：不锁定的话，客户端下次启动");
             sb.AppendLine("   还会自己检查更新，过几天又被顶到新版本。");
             sb.AppendLine();
             sb.AppendLine("没成功怎么办");
             sb.AppendLine();
-            sb.AppendLine("· 提示 SHA-256 不一致：安装包下坏了。用缓存卡片的「清除无用缓存」清掉，");
-            sb.AppendLine("  再重新下载。");
-            sb.AppendLine("· 安装器报错退出：多半是目标目录被占用。先手动退出客户端，再试一次；");
-            sb.AppendLine("  也可以点「打开缓存目录」找到安装包，双击手动安装。");
+            sb.AppendLine("· 「安装包」列显示「—」：这个版本官方没有发布安装包。国内版可以换");
+            sb.AppendLine("  一个更早的版本试；国际版官方只发布当前版本，历史版本只能靠本机缓存。");
+            sb.AppendLine("· 安装器报错退出：多半是目标目录被占用。先手动退出客户端，再双击");
+            sb.AppendLine("  安装包重试；也可以重启电脑后再装。");
+            sb.AppendLine("· 装完版本号没变：安装向导可能被取消了，重新双击安装包走一遍。");
             sb.AppendLine("· 回退成功但还是提示更新：说明没锁定，重复第 8 步。");
             sb.AppendLine("· 想省事也可以用命令行：");
             sb.AppendLine("    WorkBuddyVersionManager.exe --unlock workbuddy");
@@ -841,16 +855,21 @@ namespace WbVm
             }
             else
             {
+                int wrong = 0;
+                foreach (CachedFile f in cached) if (!f.Usable) wrong++;
+
                 sb.Append(cached.Count + " 个安装包 · 共 " + Fmt.Bytes(total));
+                if (wrong > 0) sb.Append(" · " + wrong + " 个错版");
                 if (parts.Count > 0) sb.Append("，另有 " + parts.Count + " 个未完成碎片 " + Fmt.Bytes(partBytes));
                 sb.Append("\n");
                 int n = 0;
                 foreach (CachedFile f in cached)
                 {
                     if (n++ >= 2) break;
-                    bool keep = Downloads.MatchesVersion(f, installed) || Downloads.MatchesVersion(f, locked);
+                    bool keep = f.Usable && (Downloads.MatchesVersion(f, installed) || Downloads.MatchesVersion(f, locked));
                     sb.Append("· " + (string.IsNullOrEmpty(f.VersionShort) ? f.FileName : f.VersionShort) + "  " + f.SizeText);
-                    if (keep) sb.Append("（在用）");
+                    if (!f.Usable) sb.Append("（错版）");
+                    else if (keep) sb.Append("（在用）");
                     sb.Append("\n");
                 }
                 if (cached.Count > 2) sb.Append("…");
@@ -900,7 +919,8 @@ namespace WbVm
                           " 个文件，释放 " + Fmt.Bytes(bytes) + "：");
             sb.AppendLine();
             for (int i = 0; i < useless.Count && i < 12; i++)
-                sb.AppendLine("· " + useless[i].FileName + "   " + useless[i].SizeText);
+                sb.AppendLine("· " + useless[i].FileName + "   " + useless[i].SizeText +
+                    (useless[i].Usable ? "" : "（错版，不是" + app.Edition + "的包）"));
             if (useless.Count > 12) sb.AppendLine("· …… 另外 " + (useless.Count - 12) + " 个");
             for (int i = 0; i < parts.Count && i < 6; i++)
                 sb.AppendLine("· " + parts[i].Name + "   " + Fmt.Bytes(parts[i].Length) + "（未完成的下载）");
@@ -954,7 +974,8 @@ namespace WbVm
 
         private void RefreshHeader()
         {
-            _sourceBadge.Text = _catalog.Releases.Count + " 个版本 · 最新 " + (_catalog.LatestVersion == "" ? "未知" : _catalog.LatestVersion);
+            string latest = _catalog.LatestVersionFor(_selectedApp);
+            _sourceBadge.Text = _catalog.Releases.Count + " 个版本 · 最新 " + (latest == "" ? "未知" : latest);
             _sourceBadge.FillColor = Palette.AccentSoft;
             _sourceBadge.TextColor = Palette.Accent;
             _sourceBadge.DotColor = Palette.Accent;
@@ -966,6 +987,8 @@ namespace WbVm
             foreach (KeyValuePair<string, AppCard> kv in _cards) kv.Value.Active = kv.Key == appId;
             FillGrid();
             RefreshCacheSummary();
+            RefreshHeader();
+            UpdateActionState();
         }
 
         /// <summary>开发用：截图时指定要展示的客户端</summary>
@@ -1060,18 +1083,28 @@ namespace WbVm
 
             _btnLock.Text = "锁定当前版本";
 
-            HashSet<string> cachedVersions = new HashSet<string>(StringComparer.Ordinal);
+            _cachedVersions.Clear();
+            HashSet<string> wrongVersions = new HashSet<string>(StringComparer.Ordinal);
             foreach (CachedFile f in Downloads.ListCached())
-                if (f.AppId == _selectedApp && f.Platform == "win32-x64-user") cachedVersions.Add(f.VersionShort);
+            {
+                if (f.AppId != _selectedApp || f.Platform != "win32-x64-user") continue;
+                if (f.Usable) _cachedVersions.Add(f.VersionShort);
+                else wrongVersions.Add(f.VersionShort);
+            }
 
             foreach (Release rel in _catalog.Releases)
             {
                 string noteText = rel.NoteCount > 0 ? rel.NoteCount + " 条" : "—";
-                PackageInfo win = rel.WinPackage;
-                string pkg = win == null ? "—" : (string.IsNullOrEmpty(win.SizeText) ? "有" : win.SizeText);
+                PackageInfo win = rel.PackageFor(_selectedApp);
+                bool localPkg = _cachedVersions.Contains(rel.Version);
+                string pkg;
+                if (win != null) pkg = string.IsNullOrEmpty(win.SizeText) ? "官方包" : win.SizeText;
+                else if (localPkg) pkg = "本地包";
+                else if (wrongVersions.Contains(rel.Version)) pkg = "错版包";
+                else pkg = "—";
                 string local = "";
                 if (!string.IsNullOrEmpty(installed) && rel.Version == installed) local = "当前版本";
-                else if (cachedVersions.Contains(rel.Version)) local = "已缓存";
+                else if (localPkg) local = "已缓存";
                 if (rel.LocalOnly && local == "") local = "本机";
 
                 int idx = _grid.Rows.Add(rel.Version, rel.Date, noteText, pkg, local);
@@ -1079,6 +1112,9 @@ namespace WbVm
                 if (rel.Version == installed) _grid.Rows[idx].DefaultCellStyle.ForeColor = Palette.Accent;
                 if (!string.IsNullOrEmpty(locked) && rel.Version == locked)
                     _grid.Rows[idx].Cells[0].Style.Font = UiFont.Bold;
+                // 当前客户端既没有官方包、本地也没有能用的包，整行压暗，别让人白点
+                if (win == null && !localPkg && rel.Version != installed)
+                    _grid.Rows[idx].DefaultCellStyle.ForeColor = Palette.Muted;
             }
 
             if (_grid.Rows.Count > 0)
@@ -1131,10 +1167,25 @@ namespace WbVm
                 }
             }
 
-            PackageInfo win = rel.WinPackage;
+            AppDef noteApp = Apps.ById(_selectedApp);
+            PackageInfo win = rel.PackageFor(_selectedApp);
             if (win != null)
             {
-                AppendNote("\nWindows 安装包：" + (string.IsNullOrEmpty(win.SizeText) ? "" : win.SizeText + "  ") + win.Url + "\n", UiFont.Small, Palette.Muted);
+                AppendNote("\n" + noteApp.Edition + " Windows 安装包：" +
+                    (string.IsNullOrEmpty(win.SizeText) ? "" : win.SizeText + "  ") + win.Url + "\n", UiFont.Small, Palette.Muted);
+            }
+            else if (_cachedVersions.Contains(rel.Version))
+            {
+                AppendNote("\n" + noteApp.Edition + " 这个版本官方没有下载地址，但本机缓存里已经有安装包，可以直接回退。\n", UiFont.Small, Palette.Amber);
+            }
+            else if (noteApp.Id == "workbuddyai")
+            {
+                AppendNote("\n国际版官方只发布当前版本（" + (_catalog.IntlLatestVersion == "" ? "未知" : _catalog.IntlLatestVersion) +
+                    "）的安装包，这个版本没有官方下载地址。\n", UiFont.Small, Palette.Muted);
+            }
+            else
+            {
+                AppendNote("\n这个版本没有 Windows 安装包链接。\n", UiFont.Small, Palette.Muted);
             }
             if (!string.IsNullOrEmpty(rel.NotesUrl))
                 AppendNote("官方说明：" + rel.NotesUrl + "\n", UiFont.Small, Palette.Muted);
@@ -1195,15 +1246,23 @@ namespace WbVm
             if (rel == null) return;
             if (_downloadCts != null) { AppendLog("已有下载任务在进行"); return; }
 
-            PackageInfo win = rel.WinPackage;
+            AppDef dlApp = Apps.ById(_selectedApp);
+            PackageInfo win = rel.PackageFor(_selectedApp);
             if (win == null || string.IsNullOrEmpty(win.Url))
             {
-                MessageBox.Show(this, "该版本没有 Windows 安装包链接。", "无法下载", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                string msg = dlApp.Id == "workbuddyai"
+                    ? "国际版官方只发布当前版本（" + (_catalog.IntlLatestVersion == "" ? "未知" : _catalog.IntlLatestVersion) +
+                      "）的安装包，" + rel.Version + " 没有官方下载地址。\n\n" +
+                      "如果之前在国际版客户端里下载过这个版本，可以点「打开缓存目录」找找看。"
+                    : "这个版本没有 Windows 安装包链接。";
+                MessageBox.Show(this, msg, "无法下载", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
 
             string existing = Downloads.FindCached(_selectedApp, rel.Version) != null ? "（本地已存在，将覆盖）" : "";
-            AppendLog("开始下载 " + rel.Version + " " + (string.IsNullOrEmpty(win.SizeText) ? "" : "(" + win.SizeText + ")") + existing);
+            AppendLog("开始下载 " + dlApp.Edition + " " + rel.Version + " " +
+                (string.IsNullOrEmpty(win.SizeText) ? "" : "(" + win.SizeText + ")") + existing);
+            AppendLog("  来源 " + win.Url);
 
             _downloadCts = new CancellationTokenSource();
             CancellationToken token = _downloadCts.Token;
@@ -1251,71 +1310,148 @@ namespace WbVm
         {
             Release rel = SelectedRelease();
             if (rel == null) return;
+            AppDef app = Apps.ById(_selectedApp);
 
             InstallInfo info;
             _installs.TryGetValue(_selectedApp, out info);
+            string current = info != null && info.Found ? info.Version : "";
             if (info == null || !info.Found)
             {
-                MessageBox.Show(this, "未找到安装目录。", "无法安装", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show(this,
+                    "没检测到 " + app.Name + " 的安装目录。\n\n" +
+                    "回退要先把安装包下下来，装的时候安装器会自己找原目录。\n" +
+                    "如果确实装过但没识别到，先在左侧卡片点「指定目录」。",
+                    "无法回退", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
-            if (info.Version == rel.Version)
+            if (current == rel.Version)
             {
                 MessageBox.Show(this, "当前已经是 " + rel.Version + "。", "无需回退", MessageBoxButtons.OK, MessageBoxIcon.Information);
                 return;
             }
 
             CachedFile cached = Downloads.FindCached(_selectedApp, rel.Version);
+            PackageInfo pkg = rel.PackageFor(_selectedApp);
+            if (cached == null && pkg == null)
+            {
+                string wrongName = "";
+                foreach (CachedFile f in Downloads.ListCached(_selectedApp))
+                    if (!f.Usable && Downloads.MatchesVersion(f, rel.Version)) { wrongName = f.FileName; break; }
+
+                string msg;
+                if (wrongName != "")
+                {
+                    string other = app.Id == "workbuddyai" ? "国内版" : "国际版";
+                    msg = "本地这个 " + rel.Version + " 的安装包是" + other + "的包，不能用来装" + app.Edition + "：\n" +
+                          wrongName + "\n\n" +
+                          "旧版本的工具把国内版链接错当成了国际版，已经下过的包都是错的。\n" +
+                          "点缓存卡片的「清除无用缓存」清掉，再重新下载。";
+                }
+                else if (app.Id == "workbuddyai")
+                {
+                    msg = "国际版官方只发布当前版本（" + (_catalog.IntlLatestVersion == "" ? "未知" : _catalog.IntlLatestVersion) +
+                          "）的安装包，" + rel.Version + " 既没有官方下载地址，本机也没有缓存。";
+                }
+                else
+                {
+                    msg = "本地没有 " + rel.Version + " 的安装包，官方也没有提供这个版本的下载地址。";
+                }
+                MessageBox.Show(this, msg, "没有可用安装包", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
             if (cached == null)
             {
                 DialogResult ask = MessageBox.Show(this,
-                    "本地没有 " + rel.Version + " 的安装包。要现在下载吗？\n\n下载完成后会自动继续安装。",
+                    "本地没有 " + rel.Version + " 的安装包。要现在下载吗？\n\n下载完成后会接着准备回退环境。",
                     "缺少安装包", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
                 if (ask == DialogResult.Yes) await DownloadSelected();
                 cached = Downloads.FindCached(_selectedApp, rel.Version);
                 if (cached == null) return;
             }
 
-            DialogResult confirm = MessageBox.Show(this,
-                "将把 " + Apps.ById(_selectedApp).Name + " 从 " + info.Version + " 换成 " + rel.Version + "。\n\n" +
-                "· 会先关闭客户端\n" +
-                "· 安装过程需要管理员权限（UAC）\n" +
-                "· 工作区、任务、技能等数据不会改动\n\n继续？",
-                "确认回退", MessageBoxButtons.OKCancel, MessageBoxIcon.Question);
-            if (confirm != DialogResult.OK) return;
+            BlockStatus st;
+            _blocks.TryGetValue(_selectedApp, out st);
+            bool blocked = st != null && st.Enabled;
 
-            AppendLog("开始回退到 " + rel.Version + " …");
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine("将把 " + app.Name + " " + app.Edition + " 从 " + current + " 换回 " + rel.Version + "。");
+            sb.AppendLine();
+            sb.AppendLine("点「确定」后工具自动做这几件事：");
+            sb.AppendLine("① 结束正在运行的客户端");
+            if (blocked) sb.AppendLine("② 自动解除锁定（还原启动更新开关、放开缓存写入）");
+            else sb.AppendLine("② 确认当前未锁定，无需解除");
+            sb.AppendLine("③ 清除安装失败熔断记录（备份到 block-backup）");
+            sb.AppendLine("④ 回收客户端更新缓存里待装的包");
+            sb.AppendLine("⑤ 打开资源管理器，把安装包选中");
+            sb.AppendLine();
+            sb.AppendLine("然后由你双击那个 exe 完成安装，安装器会自己匹配原安装目录。");
+            sb.AppendLine("工作区、任务、技能等数据不会改动。");
+            if (MessageBox.Show(this, sb.ToString(), "确认回退", MessageBoxButtons.OKCancel, MessageBoxIcon.Question) != DialogResult.OK)
+                return;
+
+            AppendLog("准备回退 " + app.Edition + " " + current + " → " + rel.Version + " …");
             SetBusy(true);
             Progress<string> log = new Progress<string>(delegate(string msg) { AppendLog("  " + msg); });
 
+            PrepareResult r = null;
             try
             {
-                string sha = "";
-                if (_catalog.Latest != null && _catalog.LatestBuild.StartsWith(rel.Version, StringComparison.Ordinal))
-                    sha = _catalog.Latest.GetString("sha256", "");
-
-                InstallResult r = await InstallService.InstallAsync(_selectedApp, rel.Version, cached.FullPath, sha, log);
-                if (r.Ok)
+                string sha = _catalog.ShaFor(_selectedApp, rel.Version);
+                r = await InstallService.PrepareAsync(_selectedApp, rel.Version, cached.FullPath, sha, log);
+                if (!r.Ok)
                 {
-                    AppendLog("回退完成：" + r.BeforeVersion + " → " + r.AfterVersion + "，用时 " + (r.DurationMs / 1000) + " 秒");
-                    if (StateStore.Instance.LockedVersion(_selectedApp) != rel.Version)
-                        StateStore.Instance.SetLock(_selectedApp, rel.Version, "回退后锁定");
-                }
-                else
-                {
-                    AppendLog("回退失败：" + r.Error);
-                    MessageBox.Show(this, r.Error, "回退失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    AppendLog("准备失败：" + r.Error);
+                    MessageBox.Show(this, r.Error, "准备失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
             catch (Exception ex)
             {
-                AppendLog("回退异常：" + ex.Message);
+                AppendLog("准备异常：" + ex.Message);
             }
             finally
             {
                 SetBusy(false);
             }
+
+            if (r == null || !r.Ok) return;
+
             await ReloadAll(false);
+            AppendLog("回退环境已就绪，等你在资源管理器里双击安装包完成安装。");
+            await AskAfterPrepare(app, rel);
+        }
+
+        /// <summary>环境准备好之后引导用户双击安装；装完点「是」就重新检测并重新锁定</summary>
+        private async Task AskAfterPrepare(AppDef app, Release rel)
+        {
+            DialogResult yes = MessageBox.Show(this,
+                "回退环境已准备好，资源管理器已经打开并选中了安装包。\n\n" +
+                "现在请：\n" +
+                "1. 切到资源管理器窗口，双击那个 exe\n" +
+                "2. 安装向导按默认走完（安装器自己找原安装目录，不用指定路径）\n" +
+                "3. 装完回到这个工具\n\n" +
+                "锁定已经在第 2 步自动解除，装完记得锁回来：\n" +
+                "点「是」→ 工具重新检测版本并自动锁定；\n" +
+                "点「否」→ 稍后自己点「刷新目录」再点「锁定当前版本」。",
+                "可以开始安装了", MessageBoxButtons.YesNo, MessageBoxIcon.Information);
+            if (yes != DialogResult.Yes) return;
+
+            await ReloadAll(false);
+            InstallInfo now;
+            _installs.TryGetValue(_selectedApp, out now);
+            string ver = now != null && now.Found ? now.Version : "";
+
+            if (ver == rel.Version)
+            {
+                AppendLog(app.Name + " 已回退到 " + ver + "，重新锁定…");
+                await ToggleLock();
+            }
+            else
+            {
+                MessageBox.Show(this,
+                    "还没检测到 " + rel.Version + "，当前是 " + (ver == "" ? "未检测到" : ver) + "。\n\n" +
+                    "可能是安装向导还没走完。装完后回到这里点「刷新目录」再点「锁定当前版本」即可。",
+                    "版本还没变", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
         }
 
         private void CopyLinks(bool exportAll)
@@ -1326,7 +1462,7 @@ namespace WbVm
             try
             {
                 Clipboard.SetText(text);
-                AppendLog("已复制 " + rel.Version + " 的下载链接（3 个平台）");
+                AppendLog("已复制 " + rel.Version + " 的下载链接（国内版 + 国际版）");
             }
             catch (Exception ex)
             {
@@ -1344,21 +1480,17 @@ namespace WbVm
                 if (dlg.ShowDialog(this) != DialogResult.OK) return;
 
                 StringBuilder sb = new StringBuilder();
-                sb.AppendLine("# WorkBuddy / WorkBuddy AI 官方安装包链接");
+                sb.AppendLine("# WorkBuddy（国内版）/ WorkBuddy AI（国际版）官方安装包链接");
                 sb.AppendLine("# 导出时间：" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
-                sb.AppendLine("# 来源：https://www.workbuddy.cn/docs/workbuddy/Download-History");
+                sb.AppendLine("# 国内版来源：https://www.workbuddy.cn/docs/workbuddy/Download-History");
+                sb.AppendLine("# 国际版来源：https://www.workbuddy.ai/v2/update?platform=workbuddy-win32-x64-user");
+                sb.AppendLine("# 两个版本是两套独立安装包，不要混用。");
                 sb.AppendLine();
 
                 foreach (Release rel in _catalog.Releases)
                 {
                     sb.AppendLine("## " + rel.Version + (string.IsNullOrEmpty(rel.Date) ? "" : "  " + rel.Date));
-                    foreach (KeyValuePair<string, PackageInfo> kv in rel.Packages)
-                    {
-                        string label;
-                        if (!Catalog.PlatformLabels.TryGetValue(kv.Key, out label)) label = kv.Key;
-                        sb.AppendLine(label + "  " + kv.Value.SizeText);
-                        sb.AppendLine("  " + kv.Value.Url);
-                    }
+                    sb.Append(BuildLinkText(rel, true, false));
                     sb.AppendLine();
                 }
 
@@ -1376,23 +1508,52 @@ namespace WbVm
 
         private static string BuildLinkText(Release rel, bool includeAll)
         {
+            return BuildLinkText(rel, includeAll, true);
+        }
+
+        private static string BuildLinkText(Release rel, bool includeAll, bool withVersionLine)
+        {
             StringBuilder sb = new StringBuilder();
-            sb.AppendLine(rel.Version + (string.IsNullOrEmpty(rel.Date) ? "" : "  " + rel.Date));
+            if (withVersionLine)
+                sb.AppendLine(rel.Version + (string.IsNullOrEmpty(rel.Date) ? "" : "  " + rel.Date));
+
+            sb.AppendLine("国内版 WorkBuddy");
+            bool cnAny = false;
             foreach (KeyValuePair<string, PackageInfo> kv in rel.Packages)
             {
+                if (!includeAll && kv.Key != "win32-x64-user") continue;
+                if (string.IsNullOrEmpty(kv.Value.Url)) continue;
                 string label;
                 if (!Catalog.PlatformLabels.TryGetValue(kv.Key, out label)) label = kv.Key;
-                if (!includeAll && kv.Key != "win32-x64-user") continue;
-                sb.AppendLine(label + "：" + kv.Value.Url);
+                sb.AppendLine("  " + label + "：" + kv.Value.Url);
+                cnAny = true;
             }
+            if (!cnAny) sb.AppendLine("  （无）");
+
+            sb.AppendLine("国际版 WorkBuddy AI");
+            bool intlAny = false;
+            foreach (KeyValuePair<string, PackageInfo> kv in rel.IntlPackages)
+            {
+                if (!includeAll && kv.Key != "win32-x64-user") continue;
+                if (string.IsNullOrEmpty(kv.Value.Url)) continue;
+                string label;
+                if (!Catalog.PlatformLabels.TryGetValue(kv.Key, out label)) label = kv.Key;
+                sb.AppendLine("  " + label + "：" + kv.Value.Url);
+                intlAny = true;
+            }
+            if (!intlAny) sb.AppendLine("  （官方未提供该版本）");
             return sb.ToString();
         }
 
+        /// <summary>
+        /// 刷新目录 = 版本清单 + 本机安装检测 + 拦截状态，三样一起重扫。
+        /// 只刷版本清单的话，装完客户端回来点这个按钮会一直显示「未检测到安装」。
+        /// </summary>
         private async Task RefreshCatalog()
         {
             if (_busy) return;
             SetBusy(true);
-            AppendLog("开始刷新版本目录…");
+            AppendLog("开始刷新（版本目录 + 本机安装）…");
             Progress<string> progress = new Progress<string>(delegate(string msg) { _progressLabel.Text = msg; });
 
             try
@@ -1403,7 +1564,12 @@ namespace WbVm
                 foreach (string w in report.Warnings) AppendLog("  警告：" + w);
                 if (report.Added.Count > 0) AppendLog("  新增版本：" + string.Join("、", report.Added.ToArray()));
                 if (report.UpdatedNotes.Count > 0) AppendLog("  补全说明：" + string.Join("、", report.UpdatedNotes.ToArray()));
-                AppendLog("目录刷新完成：共 " + report.Total + " 个版本，最新 " + (string.IsNullOrEmpty(report.LatestVersion) ? "未知" : report.LatestVersion));
+                AppendLog("  国内版最新 " + (string.IsNullOrEmpty(report.LatestVersion) ? "未知" : report.LatestVersion));
+                if (!string.IsNullOrEmpty(report.IntlVersion))
+                {
+                    AppendLog("  国际版最新 " + report.IntlVersion + (report.IntlNew ? "（已记录安装包地址）" : ""));
+                }
+                AppendLog("目录刷新完成：共 " + report.Total + " 个版本");
             }
             catch (Exception ex)
             {
@@ -1412,8 +1578,16 @@ namespace WbVm
             finally
             {
                 SetBusy(false);
-                RefreshHeader();
-                FillGrid();
+            }
+
+            // 关键：重扫本机安装，别让「装好了却显示未检测到」再出现
+            await ReloadAll(false);
+            foreach (AppDef a in Apps.All)
+            {
+                InstallInfo ins;
+                _installs.TryGetValue(a.Id, out ins);
+                AppendLog("  检测 " + a.Name + " " + a.Edition + "：" +
+                    (ins != null && ins.Found ? ins.Version + " @ " + Paths.Display(ins.InstallDir) : "未检测到安装"));
             }
         }
 

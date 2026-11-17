@@ -16,6 +16,8 @@ namespace WbVm
     {
         public string Url = "";
         public string SizeText = "";
+        /// <summary>来源：cn=国内版官方站，intl=国际版更新通道，local=本机缓存</summary>
+        public string Source = "";
     }
 
     public sealed class ReleaseNote
@@ -34,7 +36,10 @@ namespace WbVm
         public string NotesUrl = "";
         public string NotesTitle = "";
         public bool LocalOnly;
+        /// <summary>国内版安装包（workbuddy.cn / cos.ap-guangzhou.myqcloud.com）</summary>
         public Dictionary<string, PackageInfo> Packages = new Dictionary<string, PackageInfo>(StringComparer.Ordinal);
+        /// <summary>国际版安装包（workbuddy.ai / download.codebuddy.ai），与国内版完全独立</summary>
+        public Dictionary<string, PackageInfo> IntlPackages = new Dictionary<string, PackageInfo>(StringComparer.Ordinal);
         public List<ReleaseNote> Notes = new List<ReleaseNote>();
 
         public PackageInfo WinPackage
@@ -45,6 +50,20 @@ namespace WbVm
                 if (Packages.TryGetValue("win32-x64-user", out p)) return p;
                 return null;
             }
+        }
+
+        /// <summary>按客户端取对应的 Windows 安装包，取不到返回 null（绝不跨版回退）</summary>
+        public PackageInfo PackageFor(string appId)
+        {
+            Dictionary<string, PackageInfo> map = appId == "workbuddyai" ? IntlPackages : Packages;
+            PackageInfo p;
+            if (map.TryGetValue("win32-x64-user", out p) && p != null && !string.IsNullOrEmpty(p.Url)) return p;
+            return null;
+        }
+
+        public bool HasPackageFor(string appId)
+        {
+            return PackageFor(appId) != null;
         }
 
         public int NoteCount
@@ -61,6 +80,7 @@ namespace WbVm
     public sealed class Catalog
     {
         public const string DocsBase = "https://www.workbuddy.cn/docs/workbuddy";
+        /// <summary>国内版更新通道（历史保留常量，实际取 Apps.ById().FeedBase）</summary>
         public const string UpdateFeed = "https://copilot.tencent.com/v2/update?platform=workbuddy-win32-x64-user";
         private const string UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0 Safari/537.36";
 
@@ -73,7 +93,10 @@ namespace WbVm
         };
 
         public string GeneratedAt = "";
-        public JsonValue Latest;
+        public JsonValue Latest;          // 国内版最新
+        public JsonValue LatestIntl;      // 国际版最新
+        /// <summary>国际版 版本短号 → 安装包。国际版官方不发布历史包，这里累积每次联网见到的当前版本。</summary>
+        public Dictionary<string, PackageInfo> IntlHistory = new Dictionary<string, PackageInfo>(StringComparer.Ordinal);
         public List<Release> Releases = new List<Release>();
 
         private static Catalog _current;
@@ -123,6 +146,20 @@ namespace WbVm
             if (root == null) return;
             GeneratedAt = root.GetString("generatedAt", "");
             Latest = root.Get("latest");
+            LatestIntl = root.Get("latestIntl");
+
+            JsonValue history = root.Get("intlHistory");
+            if (history != null && history.Props != null)
+            {
+                foreach (KeyValuePair<string, JsonValue> kv in history.Props)
+                {
+                    PackageInfo p = new PackageInfo();
+                    p.Url = kv.Value.GetString("url", "");
+                    p.SizeText = kv.Value.GetString("sizeText", "");
+                    p.Source = "intl";
+                    if (!string.IsNullOrEmpty(p.Url)) IntlHistory[kv.Key] = p;
+                }
+            }
 
             JsonValue releases = root.Get("releases");
             if (releases == null) return;
@@ -145,7 +182,21 @@ namespace WbVm
                         PackageInfo p = new PackageInfo();
                         p.Url = kv.Value.GetString("url", "");
                         p.SizeText = kv.Value.GetString("sizeText", "");
+                        p.Source = "cn";
                         rel.Packages[kv.Key] = p;
+                    }
+                }
+
+                JsonValue intl = r.Get("intlPackages");
+                if (intl != null && intl.Props != null)
+                {
+                    foreach (KeyValuePair<string, JsonValue> kv in intl.Props)
+                    {
+                        PackageInfo p = new PackageInfo();
+                        p.Url = kv.Value.GetString("url", "");
+                        p.SizeText = kv.Value.GetString("sizeText", "");
+                        p.Source = "intl";
+                        rel.IntlPackages[kv.Key] = p;
                     }
                 }
 
@@ -174,6 +225,46 @@ namespace WbVm
                 if (!string.IsNullOrEmpty(rel.Version)) Releases.Add(rel);
             }
             Sort();
+            ApplyIntlHistory();
+        }
+
+        /// <summary>把累积到的国际版安装包贴回版本清单（只补不覆盖）</summary>
+        public void ApplyIntlHistory()
+        {
+            if (IntlHistory.Count == 0) return;
+            foreach (Release rel in Releases)
+            {
+                PackageInfo p;
+                if (!IntlHistory.TryGetValue(rel.Version, out p)) continue;
+                if (rel.IntlPackages.ContainsKey("win32-x64-user")) continue;
+                rel.IntlPackages["win32-x64-user"] = p;
+            }
+        }
+
+        /// <summary>记一条国际版安装包，返回是否新增</summary>
+        public bool RememberIntl(string version, string url)
+        {
+            if (string.IsNullOrEmpty(version) || string.IsNullOrEmpty(url)) return false;
+            if (IntlHistory.ContainsKey(version)) return false;
+            PackageInfo p = new PackageInfo();
+            p.Url = url;
+            p.Source = "intl";
+            IntlHistory[version] = p;
+            ApplyIntlHistory();
+            return true;
+        }
+
+        /// <summary>取某个版本的条目，没有就按版本号建一条</summary>
+        public Release EnsureRelease(string version)
+        {
+            Release rel = Find(version);
+            if (rel != null) return rel;
+            rel = new Release();
+            rel.Version = version;
+            rel.LocalOnly = true;
+            Releases.Add(rel);
+            Sort();
+            return rel;
         }
 
         private void Sort()
@@ -198,6 +289,36 @@ namespace WbVm
             get { return Latest == null ? "" : Latest.GetString("build", ""); }
         }
 
+        public string IntlLatestVersion
+        {
+            get { return LatestIntl == null ? "" : LatestIntl.GetString("version", ""); }
+        }
+
+        public string IntlLatestBuild
+        {
+            get { return LatestIntl == null ? "" : LatestIntl.GetString("build", ""); }
+        }
+
+        public string LatestVersionFor(string appId)
+        {
+            return appId == "workbuddyai" ? IntlLatestVersion : LatestVersion;
+        }
+
+        public string LatestBuildFor(string appId)
+        {
+            return appId == "workbuddyai" ? IntlLatestBuild : LatestBuild;
+        }
+
+        /// <summary>只有官方给了 sha256 才返回，国际版通道该字段为空</summary>
+        public string ShaFor(string appId, string version)
+        {
+            JsonValue latest = appId == "workbuddyai" ? LatestIntl : Latest;
+            if (latest == null) return "";
+            string build = latest.GetString("build", "");
+            if (!build.StartsWith(version, StringComparison.Ordinal)) return "";
+            return latest.GetString("sha256", "");
+        }
+
         public int TotalNotes
         {
             get
@@ -216,18 +337,60 @@ namespace WbVm
             public List<string> UpdatedNotes = new List<string>();
             public List<string> Warnings = new List<string>();
             public string LatestVersion = "";
+            public string IntlVersion = "";
+            public string IntlUrl = "";
+            public bool IntlNew;
             public int Total;
+        }
+
+        /// <summary>把内层异常也带出来，不然只有一句「发送请求时出错」没法排查</summary>
+        public static string Describe(Exception ex)
+        {
+            if (ex == null) return "";
+            StringBuilder sb = new StringBuilder(ex.Message);
+            Exception inner = ex.InnerException;
+            int depth = 0;
+            while (inner != null && depth++ < 3)
+            {
+                sb.Append(" → ").Append(inner.Message);
+                inner = inner.InnerException;
+            }
+            return sb.ToString();
         }
 
         private static HttpClient NewClient()
         {
-            HttpClientHandler h = new HttpClientHandler();
-            h.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
-            HttpClient c = new HttpClient(h);
+            HttpClient c = new HttpClient(Net.NewHandler());
             c.Timeout = TimeSpan.FromSeconds(25);
             c.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent", UserAgent);
             c.DefaultRequestHeaders.TryAddWithoutValidation("Accept-Language", "zh-CN,zh;q=0.9");
             return c;
+        }
+
+        /// <summary>
+        /// 问一次官方更新通道：给定 version 返回「比它新的那个版本」。
+        /// 传 0.0.0 即拿到当前最新；服务端已是最新时返回 204 空体。
+        /// </summary>
+        private static async Task<JsonValue> FetchLatestAsync(HttpClient http, AppDef app)
+        {
+            string feed = app.FeedBase + "&version=0.0.0&_t=" +
+                DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString(CultureInfo.InvariantCulture);
+            string json = await http.GetStringAsync(feed).ConfigureAwait(false);
+            if (string.IsNullOrEmpty(json) || json.Trim().Length == 0) return null;
+
+            JsonValue data = JsonValue.Parse(json);
+            string raw = data.GetString("version", "");
+            if (string.IsNullOrEmpty(raw)) return null;
+
+            string[] parts = raw.Split('.');
+            string shortVersion = parts.Length >= 3 ? parts[0] + "." + parts[1] + "." + parts[2] : raw;
+
+            JsonValue latest = JsonValue.NewObject();
+            latest.Set("version", shortVersion);
+            latest.Set("build", raw);
+            latest.Set("url", data.GetString("url", ""));
+            latest.Set("sha256", data.GetString("sha256hash", ""));
+            return latest;
         }
 
         public async Task<RefreshReport> RefreshAsync(IProgress<string> progress)
@@ -236,34 +399,56 @@ namespace WbVm
             Action<string> report2 = delegate(string msg) { if (progress != null) progress.Report(msg); };
 
             Dictionary<string, Release> merged = new Dictionary<string, Release>(StringComparer.Ordinal);
-            for (int i = 0; i < Releases.Count; i++) merged[Releases[i].Version] = Releases[i];
 
             using (HttpClient http = NewClient())
             {
-                report2("读取官方更新通道…");
+                report2("读取国内版更新通道…");
                 try
                 {
-                    string feed = UpdateFeed + "&version=0.0.0&_t=" + DateTimeOffset.UtcNow.ToUnixTimeMilliseconds().ToString(CultureInfo.InvariantCulture);
-                    string json = await http.GetStringAsync(feed).ConfigureAwait(false);
-                    JsonValue data = JsonValue.Parse(json);
-                    string raw = data.GetString("version", "");
-                    if (!string.IsNullOrEmpty(raw))
+                    JsonValue dom = await FetchLatestAsync(http, Apps.ById("workbuddy")).ConfigureAwait(false);
+                    if (dom != null)
                     {
-                        JsonValue latest = JsonValue.NewObject();
-                        string[] parts = raw.Split('.');
-                        string shortVersion = parts.Length >= 3 ? parts[0] + "." + parts[1] + "." + parts[2] : raw;
-                        latest.Set("version", shortVersion);
-                        latest.Set("build", raw);
-                        latest.Set("url", data.GetString("url", ""));
-                        latest.Set("sha256", data.GetString("sha256hash", ""));
-                        Latest = latest;
-                        report.LatestVersion = shortVersion;
+                        Latest = dom;
+                        report.LatestVersion = dom.GetString("version", "");
+                        Release rel = EnsureRelease(report.LatestVersion);
+                        PackageInfo p = new PackageInfo();
+                        p.Url = dom.GetString("url", "");
+                        p.Source = "cn";
+                        if (!string.IsNullOrEmpty(p.Url)) rel.Packages["win32-x64-user"] = p;
+                        if (string.IsNullOrEmpty(rel.Build)) rel.Build = dom.GetString("build", "");
                     }
                 }
                 catch (Exception ex)
                 {
-                    report.Warnings.Add("更新通道：" + ex.Message);
+                    report.Warnings.Add("国内版更新通道：" + Describe(ex));
                 }
+
+                report2("读取国际版更新通道…");
+                try
+                {
+                    JsonValue intl = await FetchLatestAsync(http, Apps.ById("workbuddyai")).ConfigureAwait(false);
+                    if (intl != null)
+                    {
+                        LatestIntl = intl;
+                        report.IntlVersion = intl.GetString("version", "");
+                        report.IntlUrl = intl.GetString("url", "");
+                        if (!string.IsNullOrEmpty(report.IntlUrl))
+                        {
+                            Release rel = EnsureRelease(report.IntlVersion);
+                            PackageInfo p = new PackageInfo();
+                            p.Url = report.IntlUrl;
+                            p.Source = "intl";
+                            rel.IntlPackages["win32-x64-user"] = p;
+                            report.IntlNew = RememberIntl(report.IntlVersion, report.IntlUrl);
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    report.Warnings.Add("国际版更新通道：" + Describe(ex));
+                }
+
+                for (int i = 0; i < Releases.Count; i++) merged[Releases[i].Version] = Releases[i];
 
                 report2("读取官网历史版本…");
                 try
@@ -294,7 +479,7 @@ namespace WbVm
                 }
                 catch (Exception ex)
                 {
-                    report.Warnings.Add("历史版本页：" + ex.Message);
+                    report.Warnings.Add("历史版本页：" + Describe(ex));
                 }
 
                 report2("读取更新日志索引…");
@@ -312,7 +497,7 @@ namespace WbVm
                 }
                 catch (Exception ex)
                 {
-                    report.Warnings.Add("更新日志索引：" + ex.Message);
+                    report.Warnings.Add("更新日志索引：" + Describe(ex));
                 }
 
                 List<KeyValuePair<string, string>> missing = new List<KeyValuePair<string, string>>();
@@ -367,6 +552,7 @@ namespace WbVm
             List<Release> all = new List<Release>(merged.Values);
             all.Sort(delegate(Release a, Release b) { return Fmt.CompareVersion(b.Version, a.Version); });
             Releases = all;
+            ApplyIntlHistory();
             GeneratedAt = DateTime.UtcNow.ToString("o");
             report.Total = Releases.Count;
 
@@ -387,6 +573,20 @@ namespace WbVm
             root.Set("generatedAt", GeneratedAt);
             root.Set("generator", "wb-version-manager-csharp");
             if (Latest != null) root.Set("latest", Latest);
+            if (LatestIntl != null) root.Set("latestIntl", LatestIntl);
+
+            if (IntlHistory.Count > 0)
+            {
+                JsonValue history = JsonValue.NewObject();
+                foreach (KeyValuePair<string, PackageInfo> kv in IntlHistory)
+                {
+                    JsonValue p = JsonValue.NewObject();
+                    p.Set("url", kv.Value.Url);
+                    p.Set("sizeText", kv.Value.SizeText);
+                    history.Set(kv.Key, p);
+                }
+                root.Set("intlHistory", history);
+            }
 
             JsonValue arr = JsonValue.NewArray();
             for (int i = 0; i < Releases.Count; i++)
@@ -409,6 +609,16 @@ namespace WbVm
                     pkgs.Set(kv.Key, p);
                 }
                 r.Set("packages", pkgs);
+
+                JsonValue intlPkgs = JsonValue.NewObject();
+                foreach (KeyValuePair<string, PackageInfo> kv in rel.IntlPackages)
+                {
+                    JsonValue p = JsonValue.NewObject();
+                    p.Set("url", kv.Value.Url);
+                    p.Set("sizeText", kv.Value.SizeText);
+                    intlPkgs.Set(kv.Key, p);
+                }
+                r.Set("intlPackages", intlPkgs);
 
                 JsonValue notes = JsonValue.NewArray();
                 for (int k = 0; k < rel.Notes.Count; k++)

@@ -144,11 +144,16 @@ async function handler(req, res) {
       const releases = mergeLocalVersions(catalog.releases, [info?.version].filter(Boolean));
       const lock = state.locks[appId] || null;
       const cached = await listCached();
+      // 国内版与国际版是两套安装包，按当前客户端选对应的那一套，绝不跨版回退
+      const latestForApp = appId === 'workbuddyai' ? catalog.latestIntl : catalog.latest;
       const items = releases.map((r) => {
-        const win = r.packages?.['win32-x64-user'];
+        const pkgs = (appId === 'workbuddyai' ? r.intlPackages : r.packages) || {};
+        const win = pkgs['win32-x64-user'];
         const cache = cached.find((c) => c.appId === appId && (c.versionShort === r.version || c.version === r.version) && c.platform === 'win32-x64-user');
         return {
           ...r,
+          packages: pkgs,
+          intlPackages: r.intlPackages || {},
           series: seriesOf(r.version),
           noteCount: countNotes(r.notes || []),
           platformLabels: PLATFORM_LABELS,
@@ -156,7 +161,7 @@ async function handler(req, res) {
           winSize: win?.sizeText || '',
           installed: info?.version === r.version,
           locked: lock?.version === r.version,
-          latest: catalog.latest?.version === r.version,
+          latest: latestForApp?.version === r.version,
           downloaded: Boolean(cache),
           cachedSize: cache?.sizeText || '',
         };
@@ -165,7 +170,7 @@ async function handler(req, res) {
         appId,
         installedVersion: info?.version || '',
         lock,
-        latest: catalog.latest,
+        latest: latestForApp,
         generatedAt: catalog.generatedAt,
         releases: items,
       });
@@ -268,7 +273,8 @@ async function handler(req, res) {
       }
       if (!cached) return json(res, 400, { error: '本地没有该版本的安装包，请先下载' });
       const catalog = await loadCatalog();
-      const sha256 = catalog.latest?.version === body.version ? catalog.latest.sha256 : '';
+      const latestForApp = body.appId === 'workbuddyai' ? catalog.latestIntl : catalog.latest;
+      const sha256 = latestForApp?.version === body.version ? (latestForApp.sha256 || '') : '';
       const result = await installVersion({
         appId: body.appId,
         version: body.version,

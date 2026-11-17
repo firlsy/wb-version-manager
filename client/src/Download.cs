@@ -22,6 +22,9 @@ namespace WbVm
         public string VersionShort = "";
         public string Build = "";
         public string Platform = "";
+        /// <summary>非空表示这个包其实是另一版的（旧版工具把国内版包下进了国际版目录）</summary>
+        public string WrongEdition = "";
+        public bool Usable { get { return WrongEdition.Length == 0; } }
         public string SizeText { get { return Fmt.Bytes(Size); } }
     }
 
@@ -46,6 +49,43 @@ namespace WbVm
     public static class Downloads
     {
         private static readonly Regex VersionRe = new Regex(@"(\d+\.\d+\.\d+\.\d+)");
+
+        /// <summary>界面那边把实时目录塞进来，用于判断缓存包属于哪一版</summary>
+        public static Func<Catalog> CatalogProvider = delegate { return Catalog.Current; };
+
+        /// <summary>
+        /// 按官方链接里的文件名反查这个安装包属于哪一版。
+        /// 旧版本的工具把国内版包下进了 store\workbuddyai，光看文件名分不出来，
+        /// 但和官方链接对一下就能认出来。返回 "" 表示对得上，否则返回它真正的归属。
+        /// </summary>
+        public static string DetectWrongEdition(string appId, string fileName)
+        {
+            if (string.IsNullOrEmpty(fileName)) return "";
+            Catalog cat;
+            try { cat = CatalogProvider(); }
+            catch { return ""; }
+            if (cat == null) return "";
+
+            if (NameInCatalog(cat, appId, fileName)) return "";
+            string other = appId == "workbuddyai" ? "workbuddy" : "workbuddyai";
+            if (NameInCatalog(cat, other, fileName)) return other;
+            return "";
+        }
+
+        private static bool NameInCatalog(Catalog cat, string appId, string fileName)
+        {
+            foreach (Release rel in cat.Releases)
+            {
+                Dictionary<string, PackageInfo> map = appId == "workbuddyai" ? rel.IntlPackages : rel.Packages;
+                foreach (KeyValuePair<string, PackageInfo> kv in map)
+                {
+                    if (kv.Value == null || string.IsNullOrEmpty(kv.Value.Url)) continue;
+                    if (string.Equals(FileNameFromUrl(kv.Value.Url), fileName, StringComparison.OrdinalIgnoreCase))
+                        return true;
+                }
+            }
+            return false;
+        }
 
         public static string FileNameFromUrl(string url)
         {
@@ -118,6 +158,7 @@ namespace WbVm
                             f.VersionShort = Fmt.ShortVersion(f.Version);
                             f.Build = f.Version;
                             f.Platform = PlatformFromName(fi.Name);
+                            f.WrongEdition = DetectWrongEdition(dirAppId, fi.Name);
                             list.Add(f);
                         }
                     }
@@ -161,6 +202,8 @@ namespace WbVm
             List<CachedFile> list = new List<CachedFile>();
             foreach (CachedFile f in ListCached(appId))
             {
+                // 错版的包一律算无用，不管版本号对不对
+                if (!f.Usable) { list.Add(f); continue; }
                 if (MatchesVersion(f, installed)) continue;
                 if (MatchesVersion(f, locked)) continue;
                 list.Add(f);
@@ -174,6 +217,7 @@ namespace WbVm
             {
                 if (!string.Equals(f.AppId, appId, StringComparison.OrdinalIgnoreCase)) continue;
                 if (f.Platform != "win32-x64-user") continue;
+                if (!f.Usable) continue;
                 if (f.VersionShort == version || f.Version == version) return f;
                 if (f.Version != null && f.Version.StartsWith(version + ".", StringComparison.Ordinal)) return f;
             }
@@ -204,9 +248,7 @@ namespace WbVm
             string part = file + ".part";
             try
             {
-                HttpClientHandler handler = new HttpClientHandler();
-                handler.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
-                using (HttpClient http = new HttpClient(handler))
+                using (HttpClient http = new HttpClient(Net.NewHandler()))
                 {
                     http.Timeout = TimeSpan.FromMinutes(30);
                     http.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent",

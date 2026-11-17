@@ -580,5 +580,14 @@ namespace WbVm
             if (profile == null) return 0;
             return BackupFailureRecord(profile).Count;
         }
+
+        /// <summary>把客户端更新缓存里的待安装包挪进工具自己的 store，避免装完又被顶回新版本</summary>
+        public static List<string> RecycleCachedInstallers(string appId)
+        {
+            AppProfile profile = Paths.ProfileOf(appId);
+            if (profile == null) return new List<string>();
+            try { return RecycleInstallers(profile); }
+            catch { return new List<string>(); }
+        }
     }
 }

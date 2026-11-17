@@ -1,6 +1,6 @@
 {
   "name": "wb-version-manager",
-  "version": "1.3.1",
+  "version": "1.3.2",
   "private": true,
   "type": "module",
   "description": "WorkBuddy / WorkBuddy AI 版本管理器（C# 桌面客户端 + 网页版）",

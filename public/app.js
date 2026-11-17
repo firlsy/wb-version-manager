@@ -21,6 +21,8 @@ const state = {
   drawerVersion: null,
   polling: null,
   refreshing: false,
+  appVersion: '',
+  updateInfo: null,
 };
 
 const PLATFORM_ORDER = ['win32-x64-user', 'darwin-arm64', 'darwin-x64'];
@@ -859,6 +861,81 @@ function settingsModal() {
   });
 }
 
+/* ---------------- 工具版本与检查更新 ---------------- */
+async function loadAppInfo() {
+  try {
+    const info = await apiGet('/api/app');
+    state.appVersion = info.version;
+    $('#appVersion').textContent = `v${info.version}`;
+    $('#appVersion').title = `当前工具版本 v${info.version}`;
+    document.title = `WB 版本管理器 v${info.version}`;
+    if (info.repoUrl) {
+      $('#repoLink').href = info.repoUrl;
+      $('#repoTitle').href = info.repoUrl;
+    }
+  } catch {
+    $('#appVersion').textContent = 'v?';
+  }
+}
+
+function applyUpdateInfo(info) {
+  state.updateInfo = info;
+  const btn = $('#updateBtn');
+  const label = $('#updateBtnText');
+  if (info?.ok && info.hasUpdate) {
+    btn.classList.add('has-update');
+    btn.title = `发现新版本 v${info.latest}，点击前往下载`;
+    label.textContent = `有新版本 v${info.latest}`;
+    $('#updateDot').hidden = false;
+  } else {
+    btn.classList.remove('has-update');
+    btn.title = '检查工具本身是否有新版本';
+    label.textContent = '检查更新';
+    $('#updateDot').hidden = true;
+  }
+}
+
+async function checkUpdate() {
+  // 已经查过且确实有新版本：再点一下就直接去下载页
+  if (state.updateInfo?.ok && state.updateInfo.hasUpdate) {
+    window.open(state.updateInfo.url || state.updateInfo.releasesUrl, '_blank', 'noopener');
+    return;
+  }
+  const btn = $('#updateBtn');
+  const label = $('#updateBtnText');
+  const prev = label.textContent;
+  btn.disabled = true;
+  label.textContent = '检查中…';
+  try {
+    const info = await apiGet('/api/update-check');
+    applyUpdateInfo(info);
+    if (!info.ok) {
+      toast(`检查更新失败：${info.error}`, 'err');
+      if (confirm(`连不上 GitHub，无法确认是否有新版本。\n\n是否直接打开 Releases 页面手动查看？`)) {
+        window.open(info.releasesUrl, '_blank', 'noopener');
+      }
+    } else if (info.hasUpdate) {
+      toast(`发现新版本 v${info.latest}（当前 v${info.current}），再点一下按钮去下载`, 'ok');
+    } else {
+      toast(`已是最新版本 v${info.current}`, 'ok');
+    }
+  } catch (err) {
+    toast(`检查更新失败：${err.message}`, 'err');
+    label.textContent = prev;
+  } finally {
+    btn.disabled = false;
+    if (!(state.updateInfo?.ok && state.updateInfo.hasUpdate)) label.textContent = prev;
+  }
+}
+
+// 启动时静默查一次：有新版本就把按钮点亮，不弹提示，不阻塞界面
+async function autoCheckUpdate() {
+  try {
+    const info = await apiGet('/api/update-check');
+    if (info?.ok && info.hasUpdate) applyUpdateInfo(info);
+  } catch {}
+}
+
 /* ---------------- refresh ---------------- */
 function setRefreshBar(on, percent = 0, message = '') {
   const bar = $('#refreshBar');
@@ -1052,6 +1129,7 @@ function bindEvents() {
     settingsModal();
   });
   $('#refreshBtn').addEventListener('click', doRefresh);
+  $('#updateBtn').addEventListener('click', checkUpdate);
   $('#exportAllBtn').addEventListener('click', () => exportModal(filteredItems(), `wb-${state.selectedAppId}-packages`));
   $('#openStoreBtn').addEventListener('click', () => apiPost('/api/reveal', { path: state.storeDir }).catch((err) => toast(err.message, 'err')));
 
@@ -1067,6 +1145,8 @@ function bindEvents() {
 (async function init() {
   bindEvents();
   try {
+    await loadAppInfo();
+    autoCheckUpdate();
     await loadState();
     await loadVersions();
     const deep = location.hash.match(/^#v?(\d+\.\d+\.\d+)$/);

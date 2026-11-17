@@ -11,7 +11,7 @@ namespace WbVm
     /// <summary>工具自身的版本与发布地址</summary>
     public static class AppInfo
     {
-        public const string Version = "1.3.1";
+        public const string Version = "1.3.2";
         public const string RepoUrl = "https://github.com/firlsy/wb-version-manager";
         public const string ReleasesUrl = RepoUrl + "/releases/latest";
         public const string LatestApi = "https://api.github.com/repos/firlsy/wb-version-manager/releases/latest";

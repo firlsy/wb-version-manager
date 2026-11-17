@@ -779,8 +779,9 @@ namespace WbVm
             sb.AppendLine("· 装完版本号没变：安装向导可能被取消了，重新双击安装包走一遍。");
             sb.AppendLine("· 回退成功但还是提示更新：说明没锁定，重复第 8 步。");
             sb.AppendLine("· 想省事也可以用命令行：");
-            sb.AppendLine("    WorkBuddyVersionManager.exe --unlock workbuddy");
-            sb.AppendLine("    WorkBuddyVersionManager.exe --lock workbuddy");
+            string exeName = Path.GetFileName(Application.ExecutablePath);
+            sb.AppendLine("    " + exeName + " --unlock workbuddy");
+            sb.AppendLine("    " + exeName + " --lock workbuddy");
             return sb.ToString();
         }
 
@@ -1661,6 +1662,13 @@ namespace WbVm
                 }
 
                 string latest = tag == null ? "" : tag.TrimStart('v', 'V').Trim();
+                if (string.IsNullOrEmpty(latest) && !string.IsNullOrEmpty(name))
+                {
+                    // tag 缺失时退回用 release 标题里的版本号（形如 "v1.3.2 · 标题"）
+                    System.Text.RegularExpressions.Match m =
+                        System.Text.RegularExpressions.Regex.Match(name, @"\d+\.\d+\.\d+");
+                    if (m.Success) latest = m.Value;
+                }
                 if (string.IsNullOrEmpty(latest))
                 {
                     AppendLog("  没能解析出线上版本号");

@@ -127,11 +127,78 @@ function exportText(format, items) {
   return items.map((it) => it.url).join('\r\n');
 }
 
+/* ---------------- 工具自身的版本与更新检查 ---------------- */
+
+const APP_REPO = 'https://github.com/firlsy/wb-version-manager';
+const APP_RELEASES = `${APP_REPO}/releases/latest`;
+const APP_LATEST_API = 'https://api.github.com/repos/firlsy/wb-version-manager/releases/latest';
+
+// 版本号的唯一来源是 client/src/Core.cs 的 AppInfo.Version：
+// exe 文件名、窗口标题、--version、网页页头都从这一处读，不存在第二份需要同步的版本字符串。
+async function readAppVersion() {
+  try {
+    const cs = await fs.readFile(path.join(ROOT, 'client', 'src', 'Core.cs'), 'utf8');
+    const m = cs.match(/public\s+const\s+string\s+Version\s*=\s*"([^"]+)"/);
+    if (m) return m[1];
+  } catch {}
+  try {
+    const pkg = JSON.parse(await fs.readFile(path.join(ROOT, 'package.json'), 'utf8'));
+    if (pkg.version) return pkg.version;
+  } catch {}
+  return '0.0.0';
+}
+
+const APP_VERSION = await readAppVersion();
+
+async function checkToolUpdate() {
+  const base = { current: APP_VERSION, repoUrl: APP_REPO, releasesUrl: APP_RELEASES };
+  try {
+    const res2 = await fetch(APP_LATEST_API, {
+      headers: {
+        'User-Agent': 'wb-version-manager',
+        Accept: 'application/vnd.github+json',
+      },
+      signal: AbortSignal.timeout(9000),
+    });
+    if (!res2.ok) throw new Error(`GitHub 返回 HTTP ${res2.status}`);
+    const j = await res2.json();
+    const latest = String(j.tag_name || j.name || '').replace(/^v/i, '').trim();
+    if (!/^\d+\.\d+\.\d+$/.test(latest)) throw new Error('GitHub 返回的版本号无法识别');
+    return {
+      ...base,
+      ok: true,
+      latest,
+      hasUpdate: cmpVersion(latest, APP_VERSION) > 0,
+      name: j.name || `v${latest}`,
+      url: j.html_url || APP_RELEASES,
+      publishedAt: j.published_at || '',
+      notes: typeof j.body === 'string' ? j.body.slice(0, 4000) : '',
+    };
+  } catch (err) {
+    const detail = err?.cause?.message ? `${err.message}（${err.cause.message}）` : String(err.message || err);
+    return { ...base, ok: false, error: detail };
+  }
+}
+
 async function handler(req, res) {
   const url = new URL(req.url, `http://${HOST}`);
   const p = url.pathname;
 
   try {
+    if (p === '/api/app' && req.method === 'GET') {
+      return json(res, 200, {
+        version: APP_VERSION,
+        exeName: `WB-Version-Manager-universal-v${APP_VERSION}.exe`,
+        title: `WB 版本管理器 v${APP_VERSION}`,
+        repoUrl: APP_REPO,
+        releasesUrl: APP_RELEASES,
+      });
+    }
+
+    if (p === '/api/update-check' && req.method === 'GET') {
+      return json(res, 200, await checkToolUpdate());
+    }
+
     if (p === '/api/state' && req.method === 'GET') {
       return json(res, 200, await buildState());
     }

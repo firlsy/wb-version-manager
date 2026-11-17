@@ -11,9 +11,9 @@
     <header class="topbar">
       <div class="topbar-inner">
         <div class="brand">
-          <div class="brand-mark">WB</div>
+          <a class="brand-mark" id="repoLink" href="https://github.com/firlsy/wb-version-manager" target="_blank" rel="noreferrer" title="打开 GitHub 仓库">WB</a>
           <div class="brand-text">
-            <h1>版本管理器</h1>
+            <h1><a id="repoTitle" href="https://github.com/firlsy/wb-version-manager" target="_blank" rel="noreferrer" title="打开 GitHub 仓库">版本管理器</a><span class="brand-ver" id="appVersion" title="当前工具版本">v—</span></h1>
             <p>WorkBuddy · WorkBuddy AI</p>
           </div>
         </div>
@@ -22,9 +22,14 @@
             <span class="dot" id="sourceDot"></span>
             <span id="sourceText">官方源连接中…</span>
           </div>
-          <button class="btn btn-ghost" id="refreshBtn">
+          <button class="btn btn-ghost" id="refreshBtn" title="重新抓取官方版本目录">
             <svg viewBox="0 0 24 24" class="ico"><path d="M21 12a9 9 0 1 1-2.64-6.36M21 3v6h-6" /></svg>
-            检查更新
+            同步目录
+          </button>
+          <button class="btn btn-ghost" id="updateBtn" title="检查工具本身是否有新版本">
+            <svg viewBox="0 0 24 24" class="ico"><path d="M12 3v11m0 0 4-4m-4 4-4-4M4 19h16" /></svg>
+            <span id="updateBtnText">检查更新</span>
+            <span class="dot-badge" id="updateDot" hidden></span>
           </button>
           <button class="icon-btn" id="settingsBtn" title="设置">
             <svg viewBox="0 0 24 24" class="ico"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9v.09a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>

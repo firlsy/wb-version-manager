@@ -92,6 +92,31 @@ button { font: inherit; color: inherit; }
 }
 .brand-text h1 { font-size: 15px; font-weight: 700; letter-spacing: 0.2px; }
 .brand-text p { font-size: 11.5px; color: var(--muted); letter-spacing: 0.3px; }
+.brand-mark { text-decoration: none; cursor: pointer; }
+.brand-text h1 { display: flex; align-items: center; gap: 7px; }
+.brand-text h1 a { color: inherit; text-decoration: none; cursor: pointer; }
+.brand-text h1 a:hover { color: var(--accent); }
+.brand-ver {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0;
+  line-height: 1.6;
+  padding: 1px 7px;
+  border-radius: 999px;
+  color: var(--accent);
+  background: var(--accent-soft);
+  border: 1px solid rgba(47, 107, 255, 0.2);
+}
+#updateBtn { position: relative; }
+#updateBtn.has-update { color: var(--accent); border-color: rgba(47, 107, 255, 0.32); background: var(--accent-soft); }
+.dot-badge {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--red);
+  box-shadow: 0 0 0 3px rgba(217, 45, 32, 0.14);
+}
 .topbar-right { display: flex; align-items: center; gap: 10px; }
 .source-pill {
   display: inline-flex;

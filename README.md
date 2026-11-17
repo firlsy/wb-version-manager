@@ -22,12 +22,11 @@ WorkBuddy 桌面端会在后台把完整安装包下载到用户目录，下次�
 
 | 文件 | 说明 |
 | --- | --- |
-| `WorkBuddyVersionManager-arm64.exe` | **C# 桌面客户端 · 64 位**，单文件 260 KB，双击即用，不需要装任何运行时。AnyCPU 构建：Windows on ARM 上原生 JIT 成 ARM64，x64 上以 64 位运行 |
-| `WorkBuddyVersionManager-x86.exe` | **C# 桌面客户端 · 32 位**，功能完全一致，给 32 位系统或需要强制 32 位进程的场景；在 x64 / ARM64 上通过兼容层运行 |
-| `wb-version-manager-v1.3.1.zip` | 网页版便携包（含 C# 客户端源码与构建脚本），解压后双击 `启动工具.bat`（需要 Node.js 20+） |
-| `SHA256SUMS.txt` | 上面三个文件的校验值 |
+| `WB-Version-Manager-universal-v1.3.2.exe` | **C# 桌面客户端 · 全架构单文件**，260 KB，双击即用，不需要装任何运行时。AnyCPU（`ILONLY`）构建：x86 系统以 32 位运行、x64 系统以 64 位运行、Windows on ARM 上 JIT 成原生 ARM64 —— 一个文件覆盖三种架构 |
+| `wb-version-manager-v1.3.2.zip` | 网页版便携包（含 C# 客户端源码与构建脚本），解压后双击 `启动工具.bat`（需要 Node.js 20+） |
+| `SHA256SUMS.txt` | 上面两个文件的校验值 |
 
-> 两个 exe 是同一份源码编译出来的，只有 `/platform` 不同。拿不准就用 `arm64` 那个。
+> 文件名里的版本号跟界面标题、`--version` 输出永远一致：构建脚本从 `client/src/Core.cs` 的 `AppInfo.Version` 读出来再拼文件名。
 
 ![主界面](docs/screenshot-main.png)
 
@@ -46,7 +45,7 @@ WorkBuddy 桌面端会在后台把完整安装包下载到用户目录，下次�
 - **刷新目录同时重扫安装**：点「刷新目录」会把版本清单、本机安装检测、拦截状态一起重扫，装完客户端回来点一下就能看到真实版本。
 - **回退步骤内置**：左下角常驻六步速查，点「完整说明」有详细版——数据在哪、装失败了怎么办。
 - **回退只准备环境，安装由你双击**：工具结束进程、自动解除锁定、清熔断记录、回收待装包，然后在资源管理器里选中安装包；安装器自己匹配原安装目录，工具不指定路径、不静默安装。
-- **版本号与自检更新**：窗口标题带版本号，标题旁的「检查更新」直接查 GitHub Releases，有新版本会给出下载页；点左上角 logo 或标题可跳到仓库。
+- **版本号与自检更新**：客户端窗口标题带版本号（`WB 版本管理器 v1.3.2`），标题旁的「检查更新」直接查 GitHub Releases，有新版本会给出下载页；网页版在品牌标题后面显示同一版本号，右上角也有「检查更新」，启动时会静默查一次，有新版本就把按钮点亮。两边的版本号都从 `AppInfo.Version` 读，跟 exe 文件名永远一致。点左上角 logo 或标题可跳到仓库。
 - **版本漂移提示**：锁定后若被其他方式升级，顶部会提示「锁定 x，当前 y」，可一键回退。
 - **可选后台守护**：注册计划任务，每 30 分钟检查一次版本漂移。
 
@@ -59,9 +58,10 @@ WorkBuddy 桌面端会在后台把完整安装包下载到用户目录，下次�
 要求：Windows 10/11。**不需要**安装 .NET 运行时或 Node.js——用的是系统自带的 .NET Framework 4.8。
 
 ```text
-双击  WorkBuddyVersionManager-arm64.exe   （64 位，含 Windows on ARM）
-双击  WorkBuddyVersionManager-x86.exe     （32 位系统或强制 32 位进程时用）
+双击  WB-Version-Manager-universal-v1.3.2.exe
 ```
+
+一个文件就够，不用管本机是 x86、x64 还是 ARM64 —— 运行时会自己挑。
 
 界面分三块：左侧两张客户端卡片（版本 / 锁定状态 / 一键锁定）、中间版本清单、下方官方更新说明与运行日志；左下角是回退步骤速查，点「完整说明」看详细版。
 
@@ -70,13 +70,13 @@ WorkBuddy 桌面端会在后台把完整安装包下载到用户目录，下次�
 也支持命令行，方便脚本化：
 
 ```powershell
-.\WorkBuddyVersionManager-arm64.exe --status                # 查看两款客户端的版本与拦截状态
-.\WorkBuddyVersionManager-arm64.exe --lock workbuddy        # 锁定（workbuddy | workbuddyai）
-.\WorkBuddyVersionManager-arm64.exe --unlock workbuddy
-.\WorkBuddyVersionManager-arm64.exe --clear-cache workbuddy # 只清国内版的无用安装包缓存
-.\WorkBuddyVersionManager-arm64.exe --links workbuddyai     # 列出国际版各版本的安装包链接
-.\WorkBuddyVersionManager-arm64.exe --refresh               # 联网刷新版本目录（含国际版通道）
-.\WorkBuddyVersionManager-arm64.exe --version               # 显示工具版本
+.\WB-Version-Manager-universal-v1.3.2.exe --status                # 查看两款客户端的版本与拦截状态
+.\WB-Version-Manager-universal-v1.3.2.exe --lock workbuddy        # 锁定（workbuddy | workbuddyai）
+.\WB-Version-Manager-universal-v1.3.2.exe --unlock workbuddy
+.\WB-Version-Manager-universal-v1.3.2.exe --clear-cache workbuddy # 只清国内版的无用安装包缓存
+.\WB-Version-Manager-universal-v1.3.2.exe --links workbuddyai     # 列出国际版各版本的安装包链接
+.\WB-Version-Manager-universal-v1.3.2.exe --refresh               # 联网刷新版本目录（含国际版通道）
+.\WB-Version-Manager-universal-v1.3.2.exe --version               # 显示工具版本
 ```
 
 ### 网页版
@@ -173,14 +173,14 @@ node server.js
 
 国际版有个硬限制：官方**只发布当前版本**的安装包，没有历史版本页（`/docs/workbuddy/Download-History` 是空壳页，sitemap 里也没有）。所以工具的做法是——每次刷新时把国际版当前版本的地址记进 `intlHistory`，日积月累形成可用清单；取不到的版本在界面上显示「—」，不会拿国内版的链接顶替。国际版回退主要靠本机缓存：客户端自己更新时下载的包会被回收进 `store/workbuddyai/`，那些都是真正的国际版安装包。
 
-「检查更新」会增量同步：只补抓缺失的版本说明，已有缓存不会被覆盖。目录保存在 `data/catalog.json`，断网也能查看已同步内容。
+「同步目录」会增量同步：只补抓缺失的版本说明，已有缓存不会被覆盖。目录保存在 `data/catalog.json`，断网也能查看已同步内容。它和「检查更新」是两件事——前者同步**被管理软件的版本目录**，后者查**这个工具自己**有没有新版。
 
 ## 三种入口
 
 | 入口 | 依赖 | 适合 |
 | --- | --- | --- |
-| `WorkBuddyVersionManager-arm64.exe` / `-x86.exe` | 无（.NET Framework 4.8 系统自带） | 日常使用，图形界面 + 命令行 |
-| `启动工具.bat` / `node server.js` | Node.js 20+ | 想直接看前端实现、改样式、远程调试 |
+| `WB-Version-Manager-universal-v1.3.2.exe` | 无（.NET Framework 4.8 系统自带） | 日常使用，图形界面 + 命令行 |
+| `启动工具.bat` / `node server.js` | Node.js 20+ | 想直接看前端实现、改样式、远程调试。页头同样显示版本号，右上角有「检查更新」 |
 | `wb-vers-manager.ps1`（仓库内，不随 Release 发布） | 无（Windows PowerShell 5.1） | 克隆仓库后只想在终端里做锁定/解除 |
 
 ```powershell
@@ -238,9 +238,11 @@ cd client
 .\build.bat
 ```
 
-产物在 `dist\WorkBuddyVersionManager-arm64.exe` 与 `dist\WorkBuddyVersionManager-x86.exe`：同一份源码编译两遍，只有 `/platform` 不同（`anycpu` 与 `x86`）。构建脚本调用 `%WINDIR%\Microsoft.NET\Framework64\v4.0.30319\csc.exe`，并把 `data/catalog.json` 作为资源嵌进去，所以 exe 拷到任何地方都能离线看版本清单。
+产物只有一个：`dist\WB-Version-Manager-universal-v<版本号>.exe`。文件名里的版本号不用手改——`build.bat` 从 `client\src\Core.cs` 的 `AppInfo.Version` 读出来拼进文件名，所以文件名、窗口标题、`--version` 输出三处永远一致。构建脚本调用 `%WINDIR%\Microsoft.NET\Framework64\v4.0.30319\csc.exe`，并把 `data/catalog.json` 作为资源嵌进去，所以 exe 拷到任何地方都能离线看版本清单。
 
-> 旧版编译器（.NET Framework 4.8 自带）不认识 `/platform:arm64`，所以 ARM 版用 `anycpu`：PE 里不带架构绑定，Windows on ARM 上由 CLR 直接 JIT 成 ARM64 本机代码，效果等同原生。
+> 为什么一个文件能覆盖三种架构：编译参数是 `/platform:anycpu`，产物 PE 头里 `machine = 0x014c`、`PE32`，但 COR 头的 `Flags = 0x00000001`，即**只有 `ILONLY`、没有任何 32BITREQUIRED / 架构绑定**。CLR 加载时按宿主进程位数 JIT：32 位系统跑 32 位，x64 跑 64 位，Windows on ARM 直接 JIT 成原生 ARM64。所以不需要再分 `-arm64.exe` / `-x86.exe` 两个包。
+>
+> 顺带一个限制：.NET Framework 4.8 自带的旧版 `csc.exe` 不认 `/platform:arm64`（报 CS1672），`arm` 也只是 32 位 ARM，所以 `anycpu` 是唯一正确解法，而不是退而求其次。
 
 
 ## 常见问题
@@ -272,6 +274,14 @@ cd client
 仓库内只包含公开的官方版本目录，不含任何本机用户名、安装路径或使用记录。运行时产生的 `data/state.json`、`store/`、`exports/` 已加入 `.gitignore`；截图脚本在保存前会把 `C:\Users\<name>` 之类的路径替换为 `<user>`。
 
 ## 更新记录
+
+**v1.3.2**
+- **三架构合并成一个文件**：不再分 `-arm64.exe` 和 `-x86.exe`，只发布一个 `WB-Version-Manager-universal-v1.3.2.exe`。`/platform:anycpu` + `ILONLY` 构建，x86 系统按 32 位跑、x64 按 64 位跑、Windows on ARM 由 CLR JIT 成原生 ARM64，三种架构通吃，下载时不用再判断自己是什么机器。
+- **产物命名规则固定下来**：`WB-Version-Manager-universal-v<版本号>.exe`，版本号是真实版本，不是占位符。`build.bat` 直接从 `client\src\Core.cs` 的 `AppInfo.Version` 读版本号拼文件名，不再手工维护第二处版本字符串——改一处，exe 文件名、窗口标题、`--version` 输出同时生效。
+- 构建脚本精简：一次只编一个产物，删掉了原来 `/platform` 循环编译两遍的逻辑。
+- **网页版补上版本号与检查更新**：品牌标题后面显示 `v1.3.2`（跟 exe 文件名、窗口标题同一来源），右上角新增「检查更新」，查 GitHub Releases 比对版本；启动时静默查一次，有新版本直接把按钮点亮成「有新版本 vX」，再点一下打开下载页。原来那个按钮改名为「同步目录」——它同步的是被管理软件的版本目录，跟工具自更新是两回事。
+- 网页版新增 `/api/app`（版本、仓库地址、exe 文件名）与 `/api/update-check`（服务端代查 GitHub，避开浏览器跨域与限流）。
+- **exe 换上自己的图标**：`client/app.ico` 内含 16/20/24/32/40/48/64/128/256 九个尺寸，跟界面左上角的品牌标同一套渐变（`#2f6bff → #6a5bff → #9a4dff` + 白色 WB）。九个尺寸都是完整的「WB」——小尺寸按像素单独调过字号（16px 用 38 号、256px 用 25 号），缩到任务栏 16px 也不会糊成一个字母。`build.bat` 用 `/win32icon` 编进去，不再是 .NET 默认那张白纸图标。
 
 **v1.3.1**
 - 窗口标题带版本号：`WB 版本管理器 v1.3.1`。

@@ -122,7 +122,7 @@ namespace WbVm
         private static bool IsCliCommand(string a)
         {
             return a == "--status" || a == "--lock" || a == "--unlock" || a == "--clear-cache"
-                || a == "--links" || a == "--refresh" || a == "--help" || a == "-h" || a == "/?";
+                || a == "--links" || a == "--refresh" || a == "--version" || a == "--help" || a == "-h" || a == "/?";
         }
 
         private static void RunCli(string[] args)
@@ -137,14 +137,24 @@ namespace WbVm
                 string cmd = args[0];
                 if (cmd == "--help" || cmd == "-h" || cmd == "/?")
                 {
-                    w.WriteLine("WB 版本管理器 · 命令行");
+                    w.WriteLine(AppInfo.TitleWithVersion);
+                    w.WriteLine("  " + AppInfo.RepoUrl);
+                    w.WriteLine();
                     w.WriteLine("  --status               查看两款客户端的版本与锁定状态");
                     w.WriteLine("  --lock   [appId]       锁定（appId: workbuddy | workbuddyai，默认 workbuddy）");
                     w.WriteLine("  --unlock [appId]       解除锁定");
                     w.WriteLine("  --clear-cache appId    清理该客户端无用的安装包缓存（只动一个，不影响另一个）");
                     w.WriteLine("  --links  [appId]       列出该客户端各版本的安装包链接");
                     w.WriteLine("  --refresh              联网刷新版本目录（含国际版通道）");
+                    w.WriteLine("  --version              显示工具版本");
                     w.WriteLine("  不带参数               打开图形界面");
+                    return;
+                }
+
+                if (cmd == "--version")
+                {
+                    w.WriteLine(AppInfo.TitleWithVersion);
+                    w.WriteLine(AppInfo.RepoUrl);
                     return;
                 }
 

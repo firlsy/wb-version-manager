@@ -8,6 +8,17 @@ using System.Text;
 
 namespace WbVm
 {
+    /// <summary>工具自身的版本与发布地址</summary>
+    public static class AppInfo
+    {
+        public const string Version = "1.3.1";
+        public const string RepoUrl = "https://github.com/firlsy/wb-version-manager";
+        public const string ReleasesUrl = RepoUrl + "/releases/latest";
+        public const string LatestApi = "https://api.github.com/repos/firlsy/wb-version-manager/releases/latest";
+        public const string Title = "WB 版本管理器";
+        public static string TitleWithVersion { get { return Title + " v" + Version; } }
+    }
+
     public sealed class AppDef
     {
         public string Id;

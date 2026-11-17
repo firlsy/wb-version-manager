@@ -22,9 +22,9 @@ WorkBuddy 桌面端会在后台把完整安装包下载到用户目录，下次�
 
 | 文件 | 说明 |
 | --- | --- |
-| `WorkBuddyVersionManager-arm64.exe` | **C# 桌面客户端 · 64 位**，单文件 258 KB，双击即用，不需要装任何运行时。AnyCPU 构建：Windows on ARM 上原生 JIT 成 ARM64，x64 上以 64 位运行 |
+| `WorkBuddyVersionManager-arm64.exe` | **C# 桌面客户端 · 64 位**，单文件 260 KB，双击即用，不需要装任何运行时。AnyCPU 构建：Windows on ARM 上原生 JIT 成 ARM64，x64 上以 64 位运行 |
 | `WorkBuddyVersionManager-x86.exe` | **C# 桌面客户端 · 32 位**，功能完全一致，给 32 位系统或需要强制 32 位进程的场景；在 x64 / ARM64 上通过兼容层运行 |
-| `wb-version-manager-v1.3.0.zip` | 网页版便携包（含 C# 客户端源码与构建脚本），解压后双击 `启动工具.bat`（需要 Node.js 20+） |
+| `wb-version-manager-v1.3.1.zip` | 网页版便携包（含 C# 客户端源码与构建脚本），解压后双击 `启动工具.bat`（需要 Node.js 20+） |
 | `SHA256SUMS.txt` | 上面三个文件的校验值 |
 
 > 两个 exe 是同一份源码编译出来的，只有 `/platform` 不同。拿不准就用 `arm64` 那个。
@@ -46,6 +46,7 @@ WorkBuddy 桌面端会在后台把完整安装包下载到用户目录，下次�
 - **刷新目录同时重扫安装**：点「刷新目录」会把版本清单、本机安装检测、拦截状态一起重扫，装完客户端回来点一下就能看到真实版本。
 - **回退步骤内置**：左下角常驻六步速查，点「完整说明」有详细版——数据在哪、装失败了怎么办。
 - **回退只准备环境，安装由你双击**：工具结束进程、自动解除锁定、清熔断记录、回收待装包，然后在资源管理器里选中安装包；安装器自己匹配原安装目录，工具不指定路径、不静默安装。
+- **版本号与自检更新**：窗口标题带版本号，标题旁的「检查更新」直接查 GitHub Releases，有新版本会给出下载页；点左上角 logo 或标题可跳到仓库。
 - **版本漂移提示**：锁定后若被其他方式升级，顶部会提示「锁定 x，当前 y」，可一键回退。
 - **可选后台守护**：注册计划任务，每 30 分钟检查一次版本漂移。
 
@@ -75,6 +76,7 @@ WorkBuddy 桌面端会在后台把完整安装包下载到用户目录，下次�
 .\WorkBuddyVersionManager-arm64.exe --clear-cache workbuddy # 只清国内版的无用安装包缓存
 .\WorkBuddyVersionManager-arm64.exe --links workbuddyai     # 列出国际版各版本的安装包链接
 .\WorkBuddyVersionManager-arm64.exe --refresh               # 联网刷新版本目录（含国际版通道）
+.\WorkBuddyVersionManager-arm64.exe --version               # 显示工具版本
 ```
 
 ### 网页版
@@ -270,6 +272,12 @@ cd client
 仓库内只包含公开的官方版本目录，不含任何本机用户名、安装路径或使用记录。运行时产生的 `data/state.json`、`store/`、`exports/` 已加入 `.gitignore`；截图脚本在保存前会把 `C:\Users\<name>` 之类的路径替换为 `<user>`。
 
 ## 更新记录
+
+**v1.3.1**
+- 窗口标题带版本号：`WB 版本管理器 v1.3.1`。
+- 标题右侧新增「检查更新」：走 GitHub Releases API 比对版本，有新版本直接给出下载页；网络不通时提示可手动打开。
+- 点左上角 logo、「版本管理器」标题或副标题，直接打开 GitHub 仓库。
+- 命令行新增 `--version`。
 
 **v1.3.0**
 - **修复致命问题：国际版的下载链接全部指向了国内版**。根因是历史版本目录只从国内版文档站抓取，一个版本只有一套 `packages`，两个客户端共用。现在按客户端分开存：国内版走 `packages`（`download.codebuddy.cn` / 腾讯云 COS），国际版走 `intlPackages`（`download.codebuddy.ai`），刷新时分别请求两个更新通道。取不到官方包就显示「—」，绝不跨版顶替。

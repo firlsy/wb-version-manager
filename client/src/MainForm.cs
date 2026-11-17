@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.IO;
+using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -49,6 +50,7 @@ namespace WbVm
         private Badge _sourceBadge;
         private FlatButton _refreshBtn;
         private FlatButton _dataDirBtn;
+        private FlatButton _checkBtn;
 
         private readonly Dictionary<string, AppCard> _cards = new Dictionary<string, AppCard>(StringComparer.Ordinal);
         private Label _cacheTitle;
@@ -114,7 +116,7 @@ namespace WbVm
 
         private void BuildUi()
         {
-            Text = "WB 版本管理器";
+            Text = AppInfo.TitleWithVersion;
             BackColor = Palette.Bg;
             ClientSize = new Size(1200, 830);
             MinimumSize = new Size(1040, 720);
@@ -137,6 +139,8 @@ namespace WbVm
 
             BrandMark mark = new BrandMark();
             mark.Location = new Point(20, 17);
+            mark.Cursor = Cursors.Hand;
+            mark.Click += delegate { OpenRepo(); };
             header.Controls.Add(mark);
 
             Label t1 = new Label();
@@ -145,7 +149,9 @@ namespace WbVm
             t1.ForeColor = Palette.Text;
             t1.AutoSize = true;
             t1.BackColor = Color.Transparent;
+            t1.Cursor = Cursors.Hand;
             t1.Location = new Point(70, 12);
+            t1.Click += delegate { OpenRepo(); };
             header.Controls.Add(t1);
 
             Label t2 = new Label();
@@ -154,8 +160,21 @@ namespace WbVm
             t2.ForeColor = Palette.Muted;
             t2.AutoSize = true;
             t2.BackColor = Color.Transparent;
+            t2.Cursor = Cursors.Hand;
             t2.Location = new Point(72, 42);
+            t2.Click += delegate { OpenRepo(); };
             header.Controls.Add(t2);
+
+            // 版本号 + 检查更新，紧跟在标题后面
+            _checkBtn = new FlatButton();
+            _checkBtn.Text = "检查更新";
+            _checkBtn.Font = UiFont.Small;
+            _checkBtn.Radius = 7;
+            _checkBtn.Size = new Size(80, 26);
+            _checkBtn.TextColor = Palette.Accent;
+            _checkBtn.Location = new Point(t1.Right + 12, 15);
+            _checkBtn.Click += async delegate { await CheckUpdate(); };
+            header.Controls.Add(_checkBtn);
 
             _sourceBadge = new Badge();
             _sourceBadge.Size = new Size(190, 24);
@@ -1591,8 +1610,100 @@ namespace WbVm
             }
         }
 
-        private async void LocateApp(string appId)
+        /* ---------------- 关于工具自身 ---------------- */
+
+        private void OpenUrl(string url)
         {
+            try
+            {
+                Process.Start(url);
+                AppendLog("已打开：" + url);
+            }
+            catch (Exception ex)
+            {
+                AppendLog("打开链接失败：" + ex.Message);
+                MessageBox.Show(this, "打不开浏览器，可以手动复制这个地址：\n\n" + url, "打开链接失败",
+                    MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+        }
+
+        /// <summary>点左上角 logo / 标题进 GitHub 仓库</summary>
+        private void OpenRepo()
+        {
+            OpenUrl(AppInfo.RepoUrl);
+        }
+
+        /// <summary>检查工具自身有没有新版本（走 GitHub Releases API）</summary>
+        private async Task CheckUpdate()
+        {
+            if (_busy) return;
+            _checkBtn.Enabled = false;
+            string old = _checkBtn.Text;
+            _checkBtn.Text = "检查中…";
+            AppendLog("检查工具更新（当前 v" + AppInfo.Version + "）…");
+
+            try
+            {
+                string tag = "";
+                string name = "";
+                string url = AppInfo.ReleasesUrl;
+
+                using (HttpClient http = new HttpClient(Net.NewHandler()))
+                {
+                    http.Timeout = TimeSpan.FromSeconds(20);
+                    http.DefaultRequestHeaders.TryAddWithoutValidation("User-Agent", "wb-version-manager");
+                    http.DefaultRequestHeaders.TryAddWithoutValidation("Accept", "application/vnd.github+json");
+                    string json = await http.GetStringAsync(AppInfo.LatestApi);
+                    JsonValue d = JsonValue.Parse(json);
+                    tag = d.GetString("tag_name", "");
+                    name = d.GetString("name", "");
+                    url = d.GetString("html_url", AppInfo.ReleasesUrl);
+                }
+
+                string latest = tag == null ? "" : tag.TrimStart('v', 'V').Trim();
+                if (string.IsNullOrEmpty(latest))
+                {
+                    AppendLog("  没能解析出线上版本号");
+                    MessageBox.Show(this, "没能从发布页解析出版本号，可以手动打开下载页查看。\n\n" + AppInfo.ReleasesUrl,
+                        "检查更新", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    return;
+                }
+
+                if (Fmt.CompareVersion(latest, AppInfo.Version) > 0)
+                {
+                    AppendLog("  发现新版本 v" + latest + "（当前 v" + AppInfo.Version + "）");
+                    DialogResult r = MessageBox.Show(this,
+                        "发现新版本 v" + latest + "（当前 v" + AppInfo.Version + "）\n\n" +
+                        (string.IsNullOrEmpty(name) ? "" : name + "\n\n") +
+                        "要打开下载页吗？\n" + url,
+                        "有新版本", MessageBoxButtons.YesNo, MessageBoxIcon.Information);
+                    if (r == DialogResult.Yes) OpenUrl(url);
+                }
+                else
+                {
+                    AppendLog("  已是最新版本");
+                    MessageBox.Show(this, "当前已经是最新版本 v" + AppInfo.Version + "。", "检查更新",
+                        MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+            }
+            catch (Exception ex)
+            {
+                string detail = Catalog.Describe(ex);
+                AppendLog("  检查失败：" + detail);
+                DialogResult r = MessageBox.Show(this,
+                    "检查更新失败：" + detail + "\n\n" +
+                    "网络不通或被拦截时，可以手动打开下载页查看。\n" + AppInfo.ReleasesUrl + "\n\n要现在打开吗？",
+                    "检查更新", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                if (r == DialogResult.Yes) OpenUrl(AppInfo.ReleasesUrl);
+            }
+            finally
+            {
+                _checkBtn.Text = old;
+                _checkBtn.Enabled = true;
+            }
+        }
+
+        private async void LocateApp(string appId)        {
             using (FolderBrowserDialog dlg = new FolderBrowserDialog())
             {
                 dlg.Description = "选择 " + Apps.ById(appId).Name + " 的安装目录（包含 " + Apps.ById(appId).Exe + " 的那一层）";

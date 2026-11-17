@@ -1,9 +1,10 @@
 {
-  "generatedAt": "2026-11-16T15:44:46.016Z",
+  "generatedAt": "2026-11-17T03:27:09.470Z",
   "sources": {
     "history": "https://www.workbuddy.cn/docs/workbuddy/Download-History",
     "changelog": "https://www.workbuddy.cn/docs/workbuddy/Changelog",
-    "updateFeed": "https://copilot.tencent.com/v2/update?platform=workbuddy-win32-x64-user"
+    "updateFeed": "https://copilot.tencent.com/v2/update?platform=workbuddy-win32-x64-user",
+    "intlUpdateFeed": "https://www.workbuddy.ai/v2/update?platform=workbuddy-win32-x64-user"
   },
   "latest": {
     "version": "5.11.3",
@@ -11,6 +12,19 @@
     "url": "https://download.codebuddy.cn/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-5.11.3.43806934-ecace0f7.exe",
     "sha256": "2fd40059eea2f9a2d641c675a66f2476d71b49d9eb32f19db8c318768133b56b",
     "publishedAt": "2026-11-13T00:35:34.000Z"
+  },
+  "latestIntl": {
+    "version": "5.9.4",
+    "build": "5.9.4.42593613",
+    "url": "https://download.codebuddy.ai/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-5.9.4.42593613-fa0a0901.exe",
+    "sha256": "",
+    "publishedAt": "2026-10-29T23:33:33.000Z"
+  },
+  "intlHistory": {
+    "5.9.4": {
+      "url": "https://download.codebuddy.ai/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-5.9.4.42593613-fa0a0901.exe",
+      "sizeText": ""
+    }
   },
   "releases": [
     {
@@ -2737,17 +2751,5 @@
       "notesTitle": "",
       "intlPackages": {}
     }
-  ],
-  "latestIntl": {
-    "version": "5.9.4",
-    "build": "5.9.4.42593613",
-    "url": "https://download.codebuddy.ai/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-5.9.4.42593613-fa0a0901.exe",
-    "sha256": ""
-  },
-  "intlHistory": {
-    "5.9.4": {
-      "url": "https://download.codebuddy.ai/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-5.9.4.42593613-fa0a0901.exe",
-      "sizeText": ""
-    }
-  }
+  ]
 }

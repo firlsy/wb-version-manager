@@ -72,6 +72,7 @@ namespace WbVm
         private NotesView _notes;
         private Label _notesTitle;
         private TextBox _log;
+        private System.Windows.Forms.Timer _runTimer;
 
         public MainForm()
         {
@@ -79,6 +80,13 @@ namespace WbVm
             BuildUi();
             Load += delegate { TryLoadDiskCatalog(); };
             Shown += async delegate { await ReloadAll(true); };
+
+            // 运行状态是外部事实，界面上自己刷一下，不然开了客户端还显示「未运行」
+            _runTimer = new System.Windows.Forms.Timer();
+            _runTimer.Interval = 5000;
+            _runTimer.Tick += delegate { RefreshRunBadge(); };
+            _runTimer.Start();
+            FormClosed += delegate { if (_runTimer != null) _runTimer.Stop(); };
         }
 
         private void TryLoadDiskCatalog()
@@ -273,16 +281,19 @@ namespace WbVm
             _lockBadge = new Badge();
             _lockBadge.Location = new Point(18, 48);
             _lockBadge.Size = new Size(110, 22);
+            _lockBadge.AutoWidth = true;
             head.Controls.Add(_lockBadge);
 
             _cacheBadge = new Badge();
             _cacheBadge.Location = new Point(136, 48);
             _cacheBadge.Size = new Size(150, 22);
+            _cacheBadge.AutoWidth = true;
             head.Controls.Add(_cacheBadge);
 
             _runBadge = new Badge();
             _runBadge.Location = new Point(294, 48);
             _runBadge.Size = new Size(96, 22);
+            _runBadge.AutoWidth = true;
             head.Controls.Add(_runBadge);
 
             _appSub = new Label();
@@ -641,6 +652,46 @@ namespace WbVm
             FillGrid();
         }
 
+        /// <summary>开发用：截图时指定要展示的客户端</summary>
+        public void DevSelect(string appId)
+        {
+            if (Apps.ById(appId) != null) SelectApp(appId);
+        }
+
+        /// <summary>只刷「运行中 / 未运行」这一枚徽章，5 秒一次</summary>
+        private void RefreshRunBadge()
+        {
+            if (_runBadge == null || _runBadge.IsDisposed) return;
+            bool running = Detector.IsRunning(_selectedApp);
+            _runBadge.Text = running ? "运行中" : "未运行";
+            _runBadge.FillColor = running ? Palette.GreenSoft : Palette.BgSoft;
+            _runBadge.TextColor = running ? Palette.Green : Palette.Muted;
+            _runBadge.DotColor = running ? Palette.Green : Palette.Muted;
+            _runBadge.FitWidth();
+            LayoutBadges();
+        }
+
+        /// <summary>三枚徽章宽度随文字变化，按顺序重排，路径标签跟着让位</summary>
+        private void LayoutBadges()
+        {
+            if (_lockBadge == null || _lockBadge.Parent == null) return;
+            Badge[] list = new Badge[] { _lockBadge, _cacheBadge, _runBadge };
+            int x = 18;
+            for (int i = 0; i < list.Length; i++)
+            {
+                if (list[i] == null) continue;
+                list[i].Location = new Point(x, 48);
+                x += list[i].Width + 8;
+            }
+            if (_appSub != null)
+            {
+                Control head = _lockBadge.Parent;
+                int w = head.ClientSize.Width - x - 6 - 12;
+                _appSub.Left = x + 6;
+                _appSub.Width = Math.Max(120, w);
+            }
+        }
+
         private void FillGrid()
         {
             AppDef app = Apps.ById(_selectedApp);
@@ -682,11 +733,8 @@ namespace WbVm
             _cacheBadge.TextColor = st != null && st.CacheBlocked ? Palette.Green : Palette.Text2;
             _cacheBadge.DotColor = st != null && st.CacheBlocked ? Palette.Green : Palette.Muted;
 
-            bool running = Detector.IsRunning(_selectedApp);
-            _runBadge.Text = running ? "运行中" : "未运行";
-            _runBadge.FillColor = Palette.BgSoft;
-            _runBadge.TextColor = running ? Palette.Green : Palette.Muted;
-            _runBadge.DotColor = running ? Palette.Green : Palette.Muted;
+            RefreshRunBadge();
+            LayoutBadges();
 
             _btnLock.Text = "锁定当前版本";
 

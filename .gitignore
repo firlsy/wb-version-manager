@@ -5,6 +5,7 @@ node_modules/
 data/state.json
 data/guard.log
 data/*.log
+data/block-backup/
 store/
 exports/
 .tmp/

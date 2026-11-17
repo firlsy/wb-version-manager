@@ -88,6 +88,12 @@ namespace WbVm
                         timer.Stop();
                         try
                         {
+                            string sel = Environment.GetEnvironmentVariable("WBVM_SELECT");
+                            if (!string.IsNullOrEmpty(sel))
+                            {
+                                form.DevSelect(sel);
+                                Application.DoEvents();
+                            }
                             using (Bitmap bmp = new Bitmap(form.Width, form.Height))
                             {
                                 form.DrawToBitmap(bmp, new Rectangle(0, 0, form.Width, form.Height));

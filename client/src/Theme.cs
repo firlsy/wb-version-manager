@@ -154,6 +154,7 @@ namespace WbVm
         protected override void OnMouseDown(MouseEventArgs e) { if (e.Button == MouseButtons.Left) { _down = true; Invalidate(); } base.OnMouseDown(e); }
         protected override void OnMouseUp(MouseEventArgs e) { _down = false; Invalidate(); base.OnMouseUp(e); }
         protected override void OnEnabledChanged(EventArgs e) { Invalidate(); base.OnEnabledChanged(e); }
+        protected override void OnTextChanged(EventArgs e) { Invalidate(); base.OnTextChanged(e); }
 
         protected override void OnPaint(PaintEventArgs e)
         {
@@ -203,6 +204,8 @@ namespace WbVm
         public Color TextColor = Palette.Accent;
         public Color DotColor = Color.Empty;
         public int Radius = 8;
+        /// <summary>宽度跟随文字，避免长文本被裁掉</summary>
+        public bool AutoWidth;
 
         public Badge()
         {
@@ -210,6 +213,25 @@ namespace WbVm
             BackColor = Color.Transparent;
             Font = UiFont.Small;
             Height = 22;
+        }
+
+        // 自绘控件必须自己响应 Text 变化，否则文字只在首次绘制时正确
+        protected override void OnTextChanged(EventArgs e)
+        {
+            FitWidth();
+            Invalidate();
+            base.OnTextChanged(e);
+        }
+
+        public void FitWidth()
+        {
+            if (!AutoWidth) return;
+            string t = string.IsNullOrEmpty(Text) ? " " : Text;
+            Size sz = TextRenderer.MeasureText(t, Font, new Size(int.MaxValue, int.MaxValue),
+                TextFormatFlags.NoPadding | TextFormatFlags.SingleLine);
+            int w = 9 + 11 + sz.Width + 8;
+            if (w < 40) w = 40;
+            if (w != Width) Width = w;
         }
 
         protected override void OnPaint(PaintEventArgs e)

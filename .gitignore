@@ -1,7 +1,7 @@
 # 依赖与运行时
 node_modules/
 
-# 工具运行时数据（含本机路径，不入库）
+# 工具运行时数据
 data/state.json
 data/guard.log
 data/*.log
@@ -21,5 +21,11 @@ desktop.ini
 # 构建产物
 dist/
 
-# 项目记忆（含本机路径）
+# 本地笔记
 .workbuddy-ai/
+
+# 本地笔记
+.workbuddy/
+
+# 本地文档
+交接文档*.md

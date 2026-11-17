@@ -97,10 +97,11 @@ namespace WbVm
 
             /* 3. 自动解除锁定：还原启动开关、放开缓存目录写入、清掉拦截记录 */
             BlockStatus st = UpdateBlock.GetStatus(appId);
-            result.WasLocked = st != null && st.Enabled;
+            // partial 也要清：配置层关着、ACL 没加上，同样会让安装器/缓存回收出问题
+            result.WasLocked = st != null && st.State != LockState.Off;
             if (result.WasLocked)
             {
-                say("自动解除锁定…");
+                say("自动解除锁定（当前状态：" + LockState.Text(st.State) + "）…");
                 BlockResult off = await Task.Run(delegate { return UpdateBlock.Disable(appId); }).ConfigureAwait(false);
                 if (off.Ok)
                 {
@@ -117,7 +118,8 @@ namespace WbVm
                 say("当前未锁定，无需解除");
                 result.Unlocked = true;
             }
-            StateStore.Instance.ClearLock(appId);
+            // 解除失败时保留锁定记录，否则连「锁的是哪一版」都丢了
+            if (result.Unlocked) StateStore.Instance.ClearLock(appId);
 
             /* 4. 清熔断记录：安装失败计数会让客户端拒绝再次安装低版本 */
             result.ClearedRecords = UpdateBlock.ClearFailureRecord(appId);

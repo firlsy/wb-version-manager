@@ -23,11 +23,15 @@
   "intlHistory": {
     "5.9.4": {
       "url": "https://download.codebuddy.ai/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-5.9.4.42593613-fa0a0901.exe",
-      "sizeText": ""
+      "sizeText": "483.5 MB",
+      "recorded": true,
+      "recordedAt": "2026-11-17"
     },
     "5.11.4": {
       "url": "https://download.codebuddy.ai/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-5.11.4.44121853-0026dff0.exe",
-      "sizeText": ""
+      "sizeText": "488.3 MB",
+      "recorded": true,
+      "recordedAt": "2026-11-17"
     }
   },
   "releases": [
@@ -43,7 +47,8 @@
       "intlPackages": {
         "win32-x64-user": {
           "url": "https://download.codebuddy.ai/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-5.11.4.44121853-0026dff0.exe",
-          "sizeText": ""
+          "sizeText": "488.3 MB",
+          "recorded": false
         }
       }
     },
@@ -201,7 +206,9 @@
       "intlPackages": {
         "win32-x64-user": {
           "url": "https://download.codebuddy.ai/workbuddy/saas/win32-x64-user/WorkBuddy-win32-x64-user-5.9.4.42593613-fa0a0901.exe",
-          "sizeText": ""
+          "sizeText": "483.5 MB",
+          "recorded": true,
+          "recordedAt": "2026-11-17"
         }
       },
       "notes": []

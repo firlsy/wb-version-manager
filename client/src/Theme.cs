@@ -303,10 +303,12 @@ namespace WbVm
 
         public event EventHandler Selected;
         public event EventHandler LockRequested;
+        public event EventHandler UnlockRequested;
 
         public event EventHandler LocateRequested;
 
         private bool _active;
+        private bool _locked;
         public bool Active
         {
             get { return _active; }
@@ -374,7 +376,17 @@ namespace WbVm
             _lockBtn.Size = new Size(74, 30);
             _lockBtn.Location = new Point(16, 122);
             _lockBtn.Primary = true;
-            _lockBtn.Click += delegate { if (LockRequested != null) LockRequested(this, EventArgs.Empty); };
+            _lockBtn.Click += delegate
+            {
+                if (_locked)
+                {
+                    if (UnlockRequested != null) UnlockRequested(this, EventArgs.Empty);
+                }
+                else
+                {
+                    if (LockRequested != null) LockRequested(this, EventArgs.Empty);
+                }
+            };
             Controls.Add(_lockBtn);
 
             _locateBtn = new FlatButton();
@@ -417,8 +429,9 @@ namespace WbVm
             _version.ForeColor = Palette.Text;
             _path.Text = Paths.Display(Install.InstallDir);
 
-            bool blocked = Block != null && Block.Enabled;
-            if (blocked)
+            string state = Block == null ? LockState.Off : Block.State;
+            _locked = state == LockState.Active;
+            if (_locked)
             {
                 _badge.Text = string.IsNullOrEmpty(LockedVersion) ? "已锁定" : "已锁定 " + LockedVersion;
                 _badge.FillColor = Palette.GreenSoft;
@@ -427,6 +440,17 @@ namespace WbVm
                 _lockBtn.Text = "解除锁定";
                 _lockBtn.Primary = false;
                 _lockBtn.Danger = true;
+                _lockBtn.Enabled = true;
+            }
+            else if (state == LockState.Partial)
+            {
+                _badge.Text = "部分生效";
+                _badge.FillColor = Palette.AmberSoft;
+                _badge.TextColor = Palette.Amber;
+                _badge.DotColor = Palette.Amber;
+                _lockBtn.Text = "重新锁定";
+                _lockBtn.Primary = true;
+                _lockBtn.Danger = false;
                 _lockBtn.Enabled = true;
             }
             else

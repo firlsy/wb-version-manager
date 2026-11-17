@@ -48,7 +48,7 @@ set ICON=
 if exist "%ROOT%app.ico" set ICON=/win32icon:"%ROOT%app.ico"
 
 set REFS=/r:System.dll /r:System.Core.dll /r:System.Drawing.dll /r:System.Windows.Forms.dll /r:System.Net.Http.dll /r:System.Web.Extensions.dll
-set SRC="%ROOT%src\Json.cs" "%ROOT%src\Core.cs" "%ROOT%src\StateStore.cs" "%ROOT%src\Detector.cs" "%ROOT%src\Catalog.cs" "%ROOT%src\Block.cs" "%ROOT%src\Download.cs" "%ROOT%src\Install.cs" "%ROOT%src\Theme.cs" "%ROOT%src\NotesView.cs" "%ROOT%src\MainForm.cs" "%ROOT%src\Program.cs"
+set SRC="%ROOT%src\Json.cs" "%ROOT%src\Core.cs" "%ROOT%src\StateStore.cs" "%ROOT%src\Detector.cs" "%ROOT%src\Catalog.cs" "%ROOT%src\Block.cs" "%ROOT%src\Download.cs" "%ROOT%src\DownloadQueue.cs" "%ROOT%src\Install.cs" "%ROOT%src\Theme.cs" "%ROOT%src\NotesView.cs" "%ROOT%src\MainForm.cs" "%ROOT%src\Program.cs"
 
 echo [*] compiler %CSC%
 echo [*] version  %VER%

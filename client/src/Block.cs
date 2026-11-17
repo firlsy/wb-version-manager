@@ -68,8 +68,38 @@ namespace WbVm
         public ConfigInfo Config;
         public FailureInfo Failure;
         public LegacyInfo Legacy;
-        public bool Enabled;
+        /// <summary>active / partial / off，判断口径见 LockState</summary>
+        public string State = LockState.Off;
         public string BlockedAt = "";
+    }
+
+    /// <summary>
+    /// 锁定状态三态。C# 与网页版必须用同一套口径：
+    ///   active  = 配置层关闭 + 缓存目录写入阻断，两层都在
+    ///   partial = 只生效了其中一层（用户自己在客户端关掉更新、或 ACL 设置失败）
+    ///   off     = 两层都没生效
+    /// 关键点：不看工具自己的 state.json 记录。记录会过期、会被别的前端清掉，
+    /// 而配置和 ACL 是本机事实，谁写的都一样。
+    /// </summary>
+    public static class LockState
+    {
+        public const string Off = "off";
+        public const string Partial = "partial";
+        public const string Active = "active";
+
+        public static string Evaluate(bool configDisabled, bool cacheBlocked)
+        {
+            if (configDisabled && cacheBlocked) return Active;
+            if (configDisabled || cacheBlocked) return Partial;
+            return Off;
+        }
+
+        public static string Text(string state)
+        {
+            if (state == Active) return "已锁定";
+            if (state == Partial) return "部分生效";
+            return "未锁定";
+        }
     }
 
     public sealed class BlockResult
@@ -292,8 +322,9 @@ namespace WbVm
             st.Legacy = legacy;
 
             JsonValue record = StateStore.Instance.GetBlock(appId);
-            bool recorded = record != null && record.Get("enabled") != null && record.Get("enabled").AsBool(false);
-            st.Enabled = recorded || cfg.Disabled || st.CacheBlocked;
+            // 三态只看本机事实（配置开关 + ACL），不看自己的记录：
+            // 记录可能是别的工具写的，也可能在别的前端解除后过期。
+            st.State = LockState.Evaluate(cfg.Disabled, st.CacheBlocked);
             st.BlockedAt = record == null ? "" : record.GetString("at", "");
             return st;
         }
@@ -413,57 +444,118 @@ namespace WbVm
             return prev;
         }
 
-        /// <summary>没有历史值可还原时，直接删键让客户端回到自己的默认行为</summary>
-        private static void ClearStartupFlag(AppProfile profile)
+        /// <summary>
+        /// 按键还原：锁定前有这个键就写回原值（true/false 都算），没有就删键回默认。
+        /// 不能沿用「只有 true 才写回」的旧规则——那会把用户自己设的 false 一起删掉。
+        /// </summary>
+        private static void RestoreKey(JsonValue target, JsonValue prevNode)
         {
-            JsonValue cfg = JsonFile.Read(profile.ConfigFile);
-            if (cfg != null && cfg.Has("startupForceAutoUpdate"))
-            {
-                cfg.Remove("startupForceAutoUpdate");
-                JsonFile.WriteAtomic(profile.ConfigFile, cfg);
-            }
-            JsonValue settings = JsonFile.Read(profile.SettingsFile);
-            if (settings != null && settings.Has("startupForceAutoUpdate"))
-            {
-                settings.Remove("startupForceAutoUpdate");
-                JsonFile.WriteAtomic(profile.SettingsFile, settings);
-            }
+            if (target == null || prevNode == null) return;
+            JsonValue hadNode = prevNode.Get("had");
+            bool had = hadNode != null && hadNode.AsBool(false);
+            JsonValue value = prevNode.Get("value");
+            if (had && value != null && value.Type == JsonValue.Kind.Bool)
+                target.Set("startupForceAutoUpdate", JsonValue.From(value.BoolValue));
+            else
+                target.Remove("startupForceAutoUpdate");
         }
 
         private static void RestoreStartupFlag(AppProfile profile, JsonValue prev)
         {
-            if (prev == null)
-            {
-                ClearStartupFlag(profile);
-                return;
-            }
+            if (prev == null) return;
 
             JsonValue prevCfg = prev.Get("config");
             if (prevCfg != null)
             {
                 JsonValue cfg = JsonFile.Read(profile.ConfigFile);
-                if (cfg == null) cfg = JsonValue.NewObject();
-                // 只有当历史值是 true（用户显式开过自动更新）才还原；
-                // 否则那个 false 多半是锁具自己写的，删键让它回到客户端默认。
-                JsonValue value = prevCfg.Get("value");
-                bool explicitTrue = value != null && value.Type == JsonValue.Kind.Bool && value.BoolValue;
-                if (explicitTrue) cfg.Set("startupForceAutoUpdate", JsonValue.From(true));
-                else cfg.Remove("startupForceAutoUpdate");
-                JsonFile.WriteAtomic(profile.ConfigFile, cfg);
+                bool had = prevCfg.Get("had") != null && prevCfg.Get("had").AsBool(false);
+                if (cfg != null || had)
+                {
+                    if (cfg == null) cfg = JsonValue.NewObject();
+                    RestoreKey(cfg, prevCfg);
+                    // 文件本来就不存在、也没有可还原的值时，不要凭空造一个空配置
+                    if (cfg.Props != null && cfg.Props.Count > 0) JsonFile.WriteAtomic(profile.ConfigFile, cfg);
+                }
             }
 
             JsonValue prevSettings = prev.Get("settings");
             if (prevSettings != null && !(prevSettings.Get("skipped") != null && prevSettings.Get("skipped").AsBool(false)))
             {
                 JsonValue settings = JsonFile.Read(profile.SettingsFile);
-                if (settings != null)
+                bool had = prevSettings.Get("had") != null && prevSettings.Get("had").AsBool(false);
+                if (settings != null || had)
                 {
-                    JsonValue value = prevSettings.Get("value");
-                    bool explicitTrue = value != null && value.Type == JsonValue.Kind.Bool && value.BoolValue;
-                    if (explicitTrue) settings.Set("startupForceAutoUpdate", JsonValue.From(true));
-                    else settings.Remove("startupForceAutoUpdate");
-                    JsonFile.WriteAtomic(profile.SettingsFile, settings);
+                    if (settings == null) settings = JsonValue.NewObject();
+                    RestoreKey(settings, prevSettings);
+                    if (settings.Props != null && settings.Props.Count > 0) JsonFile.WriteAtomic(profile.SettingsFile, settings);
                 }
+            }
+        }
+
+        /// <summary>锁定前配置值的快照，落在客户端配置目录里，供任意前端解除锁定时还原</summary>
+        internal static JsonValue ReadSnapshot(AppProfile profile)
+        {
+            JsonValue root = JsonFile.Read(profile.LockSnapshotFile);
+            if (root == null) return null;
+            return root.Get("prev");
+        }
+
+        private static void WriteSnapshot(AppProfile profile, JsonValue prev)
+        {
+            if (prev == null) return;
+            JsonValue root = JsonValue.NewObject();
+            root.Set("at", DateTime.UtcNow.ToString("o"));
+            root.Set("appId", profile.AppId);
+            root.Set("prev", prev);
+            JsonFile.WriteAtomic(profile.LockSnapshotFile, root);
+        }
+
+        private static void DeleteSnapshot(AppProfile profile)
+        {
+            try
+            {
+                if (File.Exists(profile.LockSnapshotFile)) File.Delete(profile.LockSnapshotFile);
+            }
+            catch { }
+        }
+
+        /// <summary>
+        /// 第一次动这个客户端的配置前，把原件留一份。解析失败时我们只能写回一个
+        /// 新建对象，没有原件就真的找不回来了。
+        /// </summary>
+        private static void BackupConfigFiles(AppProfile profile)
+        {
+            try
+            {
+                string appDir = Path.GetDirectoryName(profile.ConfigFile);
+                if (!string.IsNullOrEmpty(appDir)) Directory.CreateDirectory(appDir);
+                BackupOne(profile.ConfigFile, Path.Combine(appDir, ".wbvm-backup-app-config.json"));
+                BackupOne(profile.SettingsFile, Path.Combine(profile.RuntimeDir, ".wbvm-backup-settings.json"));
+            }
+            catch { }
+        }
+
+        private static void BackupOne(string src, string dest)
+        {
+            try { if (File.Exists(src)) File.Copy(src, dest, true); } catch { }
+        }
+
+        /// <summary>解锁时把「上次锁定顺手建出来的空缓存目录」收掉，别在 TEMP 里留垃圾</summary>
+        private static void RemoveCreatedDirs(JsonValue record)
+        {
+            if (record == null) return;
+            JsonValue list = record.Get("createdDirs");
+            if (list == null) return;
+            foreach (JsonValue item in list.Enumerate())
+            {
+                string dir = item.AsString("");
+                if (string.IsNullOrEmpty(dir)) continue;
+                try
+                {
+                    if (Directory.Exists(dir) && Directory.GetFileSystemEntries(dir).Length == 0)
+                        Directory.Delete(dir);
+                }
+                catch { }
             }
         }
 
@@ -505,31 +597,56 @@ namespace WbVm
             {
                 result.Moved = RecycleInstallers(profile);
                 result.Cleared = BackupFailureRecord(profile);
-                JsonValue prev = SetStartupFlag(profile, false);
 
-                // 只对 x64 缓存目录加锁（arm64 目录通常不存在）
+                // 已经锁过一次时，当前配置里的 false 是我们自己写的，不能拿它覆盖原始值
+                JsonValue oldRecord = StateStore.Instance.GetBlock(appId);
+                JsonValue prev = oldRecord != null && oldRecord.Get("prev") != null
+                    ? oldRecord.Get("prev")
+                    : ReadSnapshot(profile);
+                if (prev == null) BackupConfigFiles(profile);
+                JsonValue now = SetStartupFlag(profile, false);
+                if (prev == null) prev = now;
+                WriteSnapshot(profile, prev);
+
+                // 每个架构的缓存目录都要挡：x64 仿真下更新器写 x64 目录，
+                // 原生 ARM64 客户端写 arm64 目录，跳过哪个都会漏。
+                List<string> aclErrors = new List<string>();
+                JsonValue createdDirs = JsonValue.NewArray();
                 foreach (string dir in profile.CacheDirs)
                 {
-                    if (dir.IndexOf("arm64", StringComparison.OrdinalIgnoreCase) >= 0) continue;
-                    try { DenyWrite(dir); }
-                    catch
+                    bool existed = Directory.Exists(dir);
+                    try
                     {
-                        try { Directory.CreateDirectory(dir); } catch { }
+                        DenyWrite(dir);
+                        if (!existed) createdDirs.Add(JsonValue.From(dir));
                     }
+                    catch (Exception ex) { aclErrors.Add(dir + " → " + ex.Message); }
                 }
                 ClearProbeCache();
+
+                try { EnableLegacyQuarantine(); } catch { }
+
+                if (aclErrors.Count > 0)
+                {
+                    // 没有 ACL 就等于没拦住下载。宁可报失败，也不要写一条 enabled 假装锁上了。
+                    result.Ok = false;
+                    result.Error = "缓存目录写入阻断失败，拦截没有完成：\n" +
+                        string.Join("\n", aclErrors.ToArray()) +
+                        "\n\n启动开关已关闭、已下载的安装包已回收，但客户端仍可能把新版本下下来。";
+                    result.Status = GetStatus(appId);
+                    return result;
+                }
 
                 JsonValue record = JsonValue.NewObject();
                 record.Set("enabled", true);
                 record.Set("at", DateTime.UtcNow.ToString("o"));
                 record.Set("prev", prev);
+                record.Set("createdDirs", createdDirs);
                 record.Set("moved", result.Moved.Count);
                 JsonValue cleared = JsonValue.NewArray();
                 foreach (string c in result.Cleared) cleared.Add(JsonValue.From(c));
                 record.Set("cleared", cleared);
                 StateStore.Instance.SetBlock(appId, record);
-
-                try { EnableLegacyQuarantine(); } catch { }
 
                 result.Ok = true;
                 result.Status = GetStatus(appId);
@@ -557,8 +674,28 @@ namespace WbVm
                 foreach (string dir in profile.CacheDirs) AllowWrite(dir);
                 ClearProbeCache();
 
+                // 撤掉拒绝项之后再探一次：还是写不进去就说明没解开，别报成功
+                List<string> stuck = new List<string>();
+                foreach (string dir in profile.CacheDirs)
+                    if (Directory.Exists(dir) && !ProbeWritable(dir)) stuck.Add(dir);
+                if (stuck.Count > 0)
+                {
+                    result.Ok = false;
+                    result.Error = "缓存目录仍不可写，解除没有完成：\n" + string.Join("\n", stuck.ToArray());
+                    result.Status = GetStatus(appId);
+                    return result;
+                }
+
                 JsonValue record = StateStore.Instance.GetBlock(appId);
-                RestoreStartupFlag(profile, record == null ? null : record.Get("prev"));
+                RemoveCreatedDirs(record);
+                JsonValue prev = record != null && record.Get("prev") != null
+                    ? record.Get("prev")
+                    : ReadSnapshot(profile);
+
+                // 找不到原始值就不要动客户端配置：那个 false 可能是用户自己在客户端里设的，
+                // 删掉它等于替用户把自动更新打开。
+                if (prev != null) RestoreStartupFlag(profile, prev);
+                DeleteSnapshot(profile);
                 StateStore.Instance.ClearBlock(appId);
 
                 if (!StateStore.Instance.AnyBlockEnabled()) DisableLegacyQuarantine();

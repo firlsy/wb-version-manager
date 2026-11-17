@@ -64,6 +64,14 @@ function fmtDate(d) {
   if (!d) return '—';
   return String(d).slice(0, 10);
 }
+function shortVer(v) {
+  const parts = String(v || '').split('.');
+  return parts.length > 3 ? parts.slice(0, 3).join('.') : String(v || '');
+}
+/** 目录里是 3 段、安装清单里可能带构建号，一律按前三段比 */
+function sameVer(a, b) {
+  return Boolean(a && b) && shortVer(a) === shortVer(b);
+}
 function appById(id) {
   return state.apps.find((a) => a.id === id) || null;
 }
@@ -147,6 +155,20 @@ async function reloadAll() {
   await loadVersions();
 }
 
+/** 只重扫本机：重新读检测结果、拦截状态与缓存，不联网 */
+async function refreshLocal() {
+  const btn = $('#refreshLocalBtn');
+  btn.disabled = true;
+  try {
+    await reloadAll();
+    toast('已重新检测本机安装', 'ok');
+  } catch (err) {
+    toast(`刷新失败：${err.message}`, 'err');
+  } finally {
+    btn.disabled = false;
+  }
+}
+
 /* ---------------- render: shell ---------------- */
 function updateSource(catalog, refresh) {
   const dot = $('#sourceDot');
@@ -183,10 +205,13 @@ function renderBlock() {
   const body = $('#blockBody');
   const actions = $('#blockActions');
   const rows = Object.values(b.apps || {});
-  const onCount = rows.filter((a) => a.enabled).length;
+  const onCount = rows.filter((a) => a.state === 'active' || a.enabled).length;
+  const partialCount = rows.filter((a) => a.state === 'partial').length;
 
   badge.innerHTML = onCount
     ? `<span class="badge green">已锁定 ${onCount}/${rows.length}</span>`
+    : partialCount
+    ? `<span class="badge amber">${partialCount} 个部分生效</span>`
     : '<span class="badge gray">未锁定</span>';
   actions.innerHTML = '';
 
@@ -203,20 +228,31 @@ function renderBlock() {
         const cfgOff = a.config?.configValue === false || a.config?.settingsValue === false;
         const cache = a.cache || {};
         const fail = a.failure || {};
-        const stateClass = a.enabled ? 'on' : cache.count ? 'warn' : '';
-        const btn = a.enabled
-          ? `<button class="btn btn-sm" data-act="block-off" data-app="${a.appId}">解除锁定</button>`
-          : `<button class="btn btn-sm btn-primary" data-act="block-on" data-app="${a.appId}">锁定并拦截</button>`;
-        const cacheText = cache.count
-          ? `${cache.count} 个包 · ${cache.totalText}`
-          : '无待安装包';
-        const writeText = cache.blocked ? '写入已拒绝' : '可写入';
+        const st = a.state || (a.enabled ? 'active' : 'off');
+        const stateClass = st === 'active' ? 'on' : st === 'partial' ? 'warn' : '';
+        const stateBadge =
+          st === 'active'
+            ? '<span class="badge green">已锁定</span>'
+            : st === 'partial'
+            ? '<span class="badge amber">部分生效</span>'
+            : '<span class="badge gray">未锁定</span>';
+        const btn =
+          st === 'active'
+            ? `<button class="btn btn-sm" data-act="block-off" data-app="${a.appId}">解除锁定</button>`
+            : st === 'partial'
+            ? `<span style="display:inline-flex;gap:6px">
+                 <button class="btn btn-sm" data-act="block-off" data-app="${a.appId}">清除拦截</button>
+                 <button class="btn btn-sm btn-primary" data-act="block-on" data-app="${a.appId}">重新锁定</button>
+               </span>`
+            : `<button class="btn btn-sm btn-primary" data-act="block-on" data-app="${a.appId}">锁定并拦截</button>`;
+        const cacheText = cache.count ? `${cache.count} 个包 · ${cache.totalText}` : '无待安装包';
+        const writeText = cache.blocked ? '写入已拒绝' : st === 'partial' ? '未拦截下载' : '可写入';
         return `
         <div class="block-app ${stateClass}">
           <div class="block-app-head">
             <b>${esc(a.name)}</b>
             <span class="edition">${esc(a.edition || '')}</span>
-            ${a.enabled ? '<span class="badge green">已锁定</span>' : '<span class="badge gray">未锁定</span>'}
+            ${stateBadge}
             ${fail.exists ? `<span class="badge amber">安装失败 ${fail.count} 次</span>` : ''}
             <span class="spacer"></span>
             ${btn}
@@ -252,6 +288,20 @@ function renderAppCards() {
       const active = app.id === state.selectedAppId;
       const info = app.install || {};
       const version = info.version || '';
+      // 国内版没有发布、只有国际版有的版本：别显示成「无官方包」
+      const intlOnly =
+        app?.id !== 'workbuddyai' &&
+        !r.packages?.['win32-x64-user']?.url &&
+        Boolean(r.intlPackages?.['win32-x64-user']?.url);
+      const sizeLabel =
+        r.winSize ||
+        (r.winUrl
+          ? '有包'
+          : intlOnly
+          ? '仅国际版'
+          : app?.id === 'workbuddyai'
+          ? '官方仅最新'
+          : '无官方包');
       const badges = [];
       if (app.lock) badges.push(`<span class="badge amber">${svgIcon('lock')}已锁定 ${esc(app.lock.version)}</span>`);
       if (app.drift) badges.push(`<span class="badge red">版本漂移</span>`);
@@ -362,7 +412,10 @@ function renderVersions() {
       if (r.locked) badges.push(`<span class="badge amber">${svgIcon('lock')}锁定中</span>`);
       if (r.latest) badges.push('<span class="badge green">官方最新</span>');
       if (r.downloaded) badges.push('<span class="badge gray">已下载</span>');
-      if (r.localOnly) badges.push('<span class="badge gray">本机版本</span>');
+      if (r.recorded)
+        badges.push(
+          `<span class="badge amber" title="这条链接由本工具${r.recordedAt ? '于 ' + esc(r.recordedAt) : '此前'}记录，不是从官网同步的">工具记录</span>`
+        );
       if (!r.noteCount) badges.push('<span class="badge gray">无说明</span>');
       const checked = state.selection.has(r.version);
       return `
@@ -375,7 +428,7 @@ function renderVersions() {
           <div class="version-sub">${r.build ? esc(r.build) : '构建号未知'}</div>
         </td>
         <td class="row-date">${fmtDate(r.date)}</td>
-        <td class="row-size">${esc(r.winSize || '—')}</td>
+        <td class="row-size"${intlOnly ? ' title="国内版没有发布这一版，这一行来自国际版通道"' : ''}>${esc(sizeLabel)}</td>
         <td><div class="row-state">${badges.join('')}</div></td>
         <td>
           <div class="row-actions">
@@ -416,11 +469,30 @@ function renderDownloads() {
       const statusText =
         j.status === 'downloading'
           ? `${j.percent}% · ${j.speedText || '连接中'}`
+          : j.status === 'queued'
+          ? '排队中'
+          : j.status === 'paused'
+          ? '已暂停'
           : j.status === 'done'
           ? '已完成'
+          : j.status === 'stopped'
+          ? '已停止'
           : j.status === 'cancelled'
           ? '已取消'
           : `失败：${j.error}`;
+      const idAttr = `data-id="${esc(j.id)}"`;
+      const btns = [];
+      if (j.status === 'downloading' || j.status === 'queued') {
+        btns.push(`<button class="btn btn-sm" data-act="dl-pause" ${idAttr}>暂停</button>`);
+        btns.push(`<button class="btn btn-sm" data-act="dl-stop" ${idAttr}>停止</button>`);
+      } else if (j.status === 'paused' || j.status === 'error' || j.status === 'stopped' || j.status === 'cancelled') {
+        btns.push(`<button class="btn btn-sm btn-primary" data-act="dl-resume" ${idAttr}>继续</button>`);
+        btns.push(`<button class="btn btn-sm" data-act="dl-remove" ${idAttr}>删除</button>`);
+      }
+      if (j.status === 'done') {
+        btns.push(`<button class="btn btn-sm btn-primary" data-act="install" data-version="${esc(j.version)}" data-app="${esc(j.appId)}">安装</button>`);
+        btns.push(`<button class="btn btn-sm" data-act="dl-remove" ${idAttr}>删除</button>`);
+      }
       return `
       <div class="dl-item">
         <div class="dl-icon">${svgIcon('download')}</div>
@@ -429,10 +501,7 @@ function renderDownloads() {
           <div class="dl-meta"><span>${statusText}</span><span>${(j.received / 1048576).toFixed(1)} / ${j.total ? (j.total / 1048576).toFixed(1) : '?'} MB</span></div>
           <div class="progress"><i style="width:${j.status === 'done' ? 100 : j.percent}%"></i></div>
         </div>
-        <div class="dl-actions">
-          ${j.status === 'downloading' ? `<button class="btn btn-sm" data-act="cancel-dl" data-id="${esc(j.id)}">取消</button>` : ''}
-          ${j.status === 'done' ? `<button class="btn btn-sm btn-primary" data-act="install" data-version="${esc(j.version)}" data-app="${esc(j.appId)}">安装</button>` : ''}
-        </div>
+        <div class="dl-actions">${btns.join('')}</div>
       </div>`;
     })
     .join('');
@@ -526,7 +595,7 @@ function openDrawer(version) {
     ${r.notesUrl ? `<div style="margin-top:14px"><a class="link-btn" href="${esc(r.notesUrl)}" target="_blank" rel="noreferrer">${svgIcon('external')} 查看官方更新日志原文</a></div>` : ''}
   `;
 
-  const isLocked = state.lock?.version === r.version;
+  const isLocked = sameVer(state.lock?.version, r.version);
   const cached = state.cached.some((c) => c.appId === app?.id && (c.versionShort === r.version || c.version === r.version));
   $('#drawerFoot').innerHTML = `
     <button class="btn ${isLocked ? '' : 'btn-primary'}" data-act="${isLocked ? 'unlock' : 'lock'}" data-version="${esc(r.version)}" data-app="${app?.id || ''}">
@@ -604,11 +673,18 @@ async function selectApp(appId) {
 
 async function toggleLock(version, appId = state.selectedAppId) {
   const app = appById(appId);
-  const current = app?.lock?.version;
-  if (current === version) {
+  if (!app) return;
+  const current = app.lock?.version;
+  if (sameVer(current, version)) {
     await apiDelete(`/api/lock/${appId}`);
     toast(`已解除 ${app.name} 的版本锁定`, 'ok');
   } else {
+    if (
+      app.running &&
+      !confirm(`${app.name} 正在运行。\n\n锁定后它退出时可能把配置写回去，建议先退出客户端再锁。\n\n仍要继续吗？`)
+    ) {
+      return;
+    }
     const res = await apiPost('/api/lock', { appId, version, build: findVersion(version)?.build || '' });
     if (res.block?.error) {
       toast(`已锁定 ${version}，但拦截更新失败：${res.block.error}`, 'err');
@@ -861,6 +937,57 @@ function settingsModal() {
   });
 }
 
+/* ---------------- 两版区别 ---------------- */
+function editionModal() {
+  const cn = state.catalog?.latest?.version || '未知';
+  const intl = state.catalog?.latestIntl?.version || '未知';
+  const th = 'padding:8px 10px;border-bottom:1px solid var(--border);text-align:left;font-weight:500;color:var(--muted);font-size:12px;white-space:nowrap';
+  const td = 'padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top;font-size:12.5px';
+  const row = (key, cnText, intlText) =>
+    `<tr><td style="${td};color:var(--muted);white-space:nowrap">${key}</td><td style="${td}">${cnText}</td><td style="${td}">${intlText}</td></tr>`;
+  const mono = (t) => `<span class="mono">${esc(t)}</span>`;
+
+  showModal({
+    title: '国内版与国际版的区别',
+    wide: true,
+    body: `
+      <p style="margin:0 0 12px;color:var(--text-2);line-height:1.7">
+        两个客户端是两条<strong>独立的发布通道</strong>：版本号、安装包、配置目录都不共用。
+        本工具按程序文件名分别识别，两边的锁定与回退互不影响。
+      </p>
+      <table style="width:100%;border-collapse:collapse">
+        <thead>
+          <tr>
+            <th style="${th}">对比项</th>
+            <th style="${th}">国内版 · WorkBuddy</th>
+            <th style="${th}">国际版（国外版）· WorkBuddy AI</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${row('官网', mono('www.workbuddy.cn'), mono('www.workbuddy.ai'))}
+          ${row('更新通道', mono('copilot.tencent.com'), mono('www.workbuddy.ai/v2/update'))}
+          ${row('安装包域名', mono('download.codebuddy.cn') + '、腾讯云 COS', mono('download.codebuddy.ai'))}
+          ${row('程序文件名', mono('WorkBuddy.exe'), mono('WorkBuddyAI.exe'))}
+          ${row('配置目录', mono('%USERPROFILE%\\.workbuddy'), mono('%USERPROFILE%\\.workbuddy-ai'))}
+          ${row('当前最新', `<b>${esc(cn)}</b>`, `<b>${esc(intl)}</b>`)}
+          ${row('历史版本', `官网有完整历史版本页，当前目录收录 ${state.catalog?.total || 0} 个版本`, '官方只发布当前版本，历史包靠本机缓存累积')}
+          ${row('更新日志', '中文站，逐版本收录', '英文站，条目较少')}
+        </tbody>
+      </table>
+      <div style="margin-top:12px;padding:10px 12px;background:var(--amber-soft);border:1px solid #f0dcb4;border-radius:10px;font-size:12.5px;color:var(--text-2);line-height:1.7">
+        <b>安装包不能混用。</b>两边的包都叫 ${mono('WorkBuddy-win32-x64-user-*')}，文件名几乎一样，
+        但目标目录和配置不同。装错通常表现为「装完还是旧版本」或者配置、工作区找不到。
+        本工具取不到某一版的官方包时显示「—」，<b>不会拿另一版的包顶替</b>。
+      </div>
+      <div class="section-label">怎么分辨本机装的是哪个</div>
+      <p style="margin:0;color:var(--text-2);line-height:1.7">
+        看安装目录里是 ${mono('WorkBuddy.exe')}（国内版）还是 ${mono('WorkBuddyAI.exe')}（国际版）；
+        或者看上方两张卡片，检测到的会显示版本号，没有的显示「未检测到」，也可以手动指定目录。
+      </p>`,
+    actions: [{ label: '知道了', kind: 'primary' }],
+  });
+}
+
 /* ---------------- 工具版本与检查更新 ---------------- */
 async function loadAppInfo() {
   try {
@@ -979,21 +1106,20 @@ async function doRefresh() {
 /* ---------------- polling ---------------- */
 function startPolling() {
   if (state.polling) return;
+  state.toasted = state.toasted || new Set();
   state.polling = setInterval(async () => {
-    const hasActive = state.jobs.some((j) => j.status === 'downloading');
-    if (hasActive) {
-      try {
-        await refreshDownloads();
-        const done = state.jobs.filter((j) => j.status === 'done');
-        if (done.length) {
-          for (const j of done) {
-            toast(`${j.version} 安装包下载完成`, 'ok');
-            state.jobs = state.jobs.filter((x) => x.id !== j.id);
-          }
-          await loadVersions();
-        }
-      } catch {}
-    }
+    // 排队中的也要继续轮询，否则队列没跑起来界面就不动了
+    const hasActive = state.jobs.some((j) => j.status === 'downloading' || j.status === 'queued');
+    if (!hasActive) return;
+    try {
+      await refreshDownloads();
+      for (const j of state.jobs.filter((x) => x.status === 'done')) {
+        if (state.toasted.has(j.id)) continue;
+        state.toasted.add(j.id);
+        toast(`${j.version} 安装包下载完成`, 'ok');
+        await loadVersions();
+      }
+    } catch {}
   }, 1200);
 }
 
@@ -1031,17 +1157,36 @@ function bindEvents() {
           if (!cached) await downloadVersion(version, appId, true);
           installConfirm(version, appId);
         } else if (name === 'install') installConfirm(version, appId);
-        else if (name === 'cancel-dl') {
-          await apiPost(`/api/download/${encodeURIComponent(id)}/cancel`, {});
+        else if (name === 'dl-pause' || name === 'dl-resume' || name === 'dl-stop' || name === 'dl-remove') {
+          const res = await apiPost(`/api/download/${encodeURIComponent(id)}/${name.slice(3)}`, {});
           await refreshDownloads();
-        }         else if (name === 'reveal') {
+          if (name === 'dl-pause') toast('已暂停，继续时会接着下', 'ok');
+          else if (name === 'dl-resume') { toast('已继续下载', 'ok'); startPolling(); }
+          else if (name === 'dl-stop') toast('已停止，未完成的碎片已删除', 'ok');
+          else toast('已从队列移除', 'ok');
+        } else if (name === 'dl-parts') {
+          const res = await apiPost('/api/downloads/parts/clear', {});
+          await refreshDownloads();
+          toast(res.count ? `已清理 ${res.count} 个未完成碎片，释放 ${res.sizeText}` : '没有可清理的碎片', 'ok');
+        } else if (name === 'dl-clear') {
+          const res = await apiPost('/api/downloads/clear', {});
+          await refreshDownloads();
+          toast(res.cleared ? `已清理 ${res.cleared} 条记录` : '没有可清理的记录', 'ok');
+        } else if (name === 'reveal') {
           await apiPost('/api/reveal', { path });
         } else if (name === 'block-on' || name === 'block-off') {
           const target = appId || state.selectedAppId;
-          const res = await apiPost('/api/block', { enabled: name === 'block-on', appId: target });
-          const fresh = await apiGet('/api/state');
-          state.block = fresh.block;
-          renderBlock();
+          let res = null;
+          try {
+            res = await apiPost('/api/block', { enabled: name === 'block-on', appId: target });
+          } finally {
+            // 失败时也要刷新：让「部分生效」如实显示出来，而不是停在旧状态
+            const fresh = await apiGet('/api/state').catch(() => null);
+            if (fresh) {
+              state.block = fresh.block;
+              renderBlock();
+            }
+          }
           if (name === 'block-on') {
             const n = res.moved?.length || 0;
             toast(n ? `已锁定，${n} 个已下载的安装包移入本地仓库` : '已锁定，自动更新已关闭', 'ok');
@@ -1129,6 +1274,8 @@ function bindEvents() {
     settingsModal();
   });
   $('#refreshBtn').addEventListener('click', doRefresh);
+  $('#refreshLocalBtn').addEventListener('click', refreshLocal);
+  $('#editionHelp').addEventListener('click', editionModal);
   $('#updateBtn').addEventListener('click', checkUpdate);
   $('#exportAllBtn').addEventListener('click', () => exportModal(filteredItems(), `wb-${state.selectedAppId}-packages`));
   $('#openStoreBtn').addEventListener('click', () => apiPost('/api/reveal', { path: state.storeDir }).catch((err) => toast(err.message, 'err')));

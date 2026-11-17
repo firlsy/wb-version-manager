@@ -11,7 +11,7 @@ namespace WbVm
     /// <summary>工具自身的版本与发布地址</summary>
     public static class AppInfo
     {
-        public const string Version = "1.3.2";
+        public const string Version = "1.3.3";
         public const string RepoUrl = "https://github.com/firlsy/wb-version-manager";
         public const string ReleasesUrl = RepoUrl + "/releases/latest";
         public const string LatestApi = "https://api.github.com/repos/firlsy/wb-version-manager/releases/latest";
@@ -78,6 +78,11 @@ namespace WbVm
         public string SettingsFile;
         public string FailureFile;
         public string AttemptFile;
+        /// <summary>
+        /// 锁定前配置值的快照。放在客户端配置目录里，而不是工具自己的 state.json，
+        /// 这样 C# / 网页版 / ps1 任何一个前端解除锁定都能读到同一份原始值。
+        /// </summary>
+        public string LockSnapshotFile;
         public string[] CacheDirs;
         public string StoreDir;
     }
@@ -169,6 +174,7 @@ namespace WbVm
             p.SettingsFile = Path.Combine(runtimeDir, "settings.json");
             p.FailureFile = Path.Combine(runtimeDir, "app", "win-install-failure.json");
             p.AttemptFile = Path.Combine(runtimeDir, "app", "win-install-attempt.json");
+            p.LockSnapshotFile = Path.Combine(runtimeDir, "app", ".wbvm-block.json");
             p.CacheDirs = new string[]
             {
                 Path.Combine(TempRoot, "workbuddy-update-x64-" + slug),
@@ -295,6 +301,16 @@ namespace WbVm
             string[] parts = (version ?? "").Split('.');
             if (parts.Length <= 3) return version ?? "";
             return parts[0] + "." + parts[1] + "." + parts[2];
+        }
+
+        /// <summary>
+        /// 比较两个版本是否同一版。目录里是 3 段（5.11.3），安装清单里可能带构建号
+        /// （5.11.3.43806934），直接 == 会永远不相等，所以统一按前三段比。
+        /// </summary>
+        public static bool SameVersion(string a, string b)
+        {
+            if (string.IsNullOrEmpty(a) || string.IsNullOrEmpty(b)) return false;
+            return CompareVersion(ShortVersion(a), ShortVersion(b)) == 0;
         }
     }
 

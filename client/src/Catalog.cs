@@ -18,6 +18,13 @@ namespace WbVm
         public string SizeText = "";
         /// <summary>来源：cn=国内版官方站，intl=国际版更新通道，local=本机缓存</summary>
         public string Source = "";
+        /// <summary>
+        /// 这条链接是本工具记下来的，不是这次从官网同步来的。
+        /// 国际版只发布最新版本，旧版地址官网会撤；记下来才能继续回退。
+        /// </summary>
+        public bool Recorded;
+        /// <summary>记录时间（ISO），老数据可能为空</summary>
+        public string RecordedAt = "";
     }
 
     public sealed class ReleaseNote
@@ -157,6 +164,8 @@ namespace WbVm
                     p.Url = kv.Value.GetString("url", "");
                     p.SizeText = kv.Value.GetString("sizeText", "");
                     p.Source = "intl";
+                    p.Recorded = true;
+                    p.RecordedAt = kv.Value.GetString("recordedAt", "");
                     if (!string.IsNullOrEmpty(p.Url)) IntlHistory[kv.Key] = p;
                 }
             }
@@ -196,6 +205,9 @@ namespace WbVm
                         p.Url = kv.Value.GetString("url", "");
                         p.SizeText = kv.Value.GetString("sizeText", "");
                         p.Source = "intl";
+                        JsonValue rec = kv.Value.Get("recorded");
+                        p.Recorded = rec != null && rec.AsBool(false);
+                        p.RecordedAt = kv.Value.GetString("recordedAt", "");
                         rel.IntlPackages[kv.Key] = p;
                     }
                 }
@@ -226,6 +238,7 @@ namespace WbVm
             }
             Sort();
             ApplyIntlHistory();
+            MarkIntlProvenance();
         }
 
         /// <summary>把累积到的国际版安装包贴回版本清单（只补不覆盖）</summary>
@@ -236,8 +249,35 @@ namespace WbVm
             {
                 PackageInfo p;
                 if (!IntlHistory.TryGetValue(rel.Version, out p)) continue;
-                if (rel.IntlPackages.ContainsKey("win32-x64-user")) continue;
+                PackageInfo existing;
+                if (rel.IntlPackages.TryGetValue("win32-x64-user", out existing))
+                {
+                    // 地址已经有了但体积是空的（老目录 / 刚补探到）：把体积填进去
+                    if (existing != null && string.IsNullOrEmpty(existing.SizeText) && !string.IsNullOrEmpty(p.SizeText))
+                        existing.SizeText = p.SizeText;
+                    continue;
+                }
                 rel.IntlPackages["win32-x64-user"] = p;
+            }
+        }
+
+        /// <summary>
+        /// 判定国际版安装包的归属：只有官网当前发布的那一版算「官方同步」，
+        /// 其余都是本工具记录下来的——官网会撤掉旧版地址，我们的记录要留着。
+        /// </summary>
+        public void MarkIntlProvenance()
+        {
+            string current = LatestIntl != null ? LatestIntl.GetString("version", "") : "";
+            string stamp = DateTime.UtcNow.ToString("yyyy-MM-dd");
+            foreach (Release rel in Releases)
+            {
+                foreach (PackageInfo p in rel.IntlPackages.Values)
+                {
+                    if (p == null) continue;
+                    bool official = !string.IsNullOrEmpty(current) && rel.Version == current;
+                    p.Recorded = !official;
+                    if (p.Recorded && string.IsNullOrEmpty(p.RecordedAt)) p.RecordedAt = stamp;
+                }
             }
         }
 
@@ -249,8 +289,11 @@ namespace WbVm
             PackageInfo p = new PackageInfo();
             p.Url = url;
             p.Source = "intl";
+            p.Recorded = true;
+            p.RecordedAt = DateTime.UtcNow.ToString("yyyy-MM-dd");
             IntlHistory[version] = p;
             ApplyIntlHistory();
+            MarkIntlProvenance();
             return true;
         }
 
@@ -358,6 +401,66 @@ namespace WbVm
             return sb.ToString();
         }
 
+        /// <summary>
+        /// 官方通道不返回安装包体积，自己探一次 Content-Length。
+        /// 先 HEAD，CDN 不认就退回 Range: bytes=0-0 读 Content-Range 的总长。
+        /// </summary>
+        private static async Task<string> ProbeSizeAsync(HttpClient http, string url)
+        {
+            // 单次探测最多等 10 秒：CDN 卡住不该把整个「刷新目录」拖成几分钟
+            using (CancellationTokenSource cts = new CancellationTokenSource(TimeSpan.FromSeconds(10)))
+                return await ProbeSizeAsync(http, url, cts.Token).ConfigureAwait(false);
+        }
+
+        private static async Task<string> ProbeSizeAsync(HttpClient http, string url, CancellationToken token)
+        {
+            if (string.IsNullOrEmpty(url)) return "";
+            try
+            {
+                using (HttpRequestMessage head = new HttpRequestMessage(HttpMethod.Head, url))
+                using (HttpResponseMessage res = await http.SendAsync(head, HttpCompletionOption.ResponseHeadersRead, token).ConfigureAwait(false))
+                {
+                    if (res.IsSuccessStatusCode)
+                    {
+                        long len = res.Content.Headers.ContentLength ?? 0;
+                        if (len > 0) return Fmt.Bytes(len);
+                    }
+                }
+            }
+            catch { }
+
+            try
+            {
+                using (HttpRequestMessage get = new HttpRequestMessage(HttpMethod.Get, url))
+                {
+                    get.Headers.Range = new System.Net.Http.Headers.RangeHeaderValue(0, 0);
+                    using (HttpResponseMessage res = await http.SendAsync(get, HttpCompletionOption.ResponseHeadersRead, token).ConfigureAwait(false))
+                    {
+                        System.Net.Http.Headers.ContentRangeHeaderValue range = res.Content.Headers.ContentRange;
+                        if (range != null && range.HasLength && range.Length.HasValue)
+                            return Fmt.Bytes(range.Length.Value);
+                    }
+                }
+            }
+            catch { }
+            return "";
+        }
+
+        /// <summary>并发上限 4：既快，又不会把 CDN 打出限流</summary>
+        private static async Task ProbeIntoAsync(HttpClient http, SemaphoreSlim gate, PackageInfo pkg)
+        {
+            if (pkg == null || string.IsNullOrEmpty(pkg.Url)) return;
+            await gate.WaitAsync().ConfigureAwait(false);
+            try
+            {
+                pkg.SizeText = await ProbeSizeAsync(http, pkg.Url).ConfigureAwait(false);
+            }
+            finally
+            {
+                gate.Release();
+            }
+        }
+
         private static HttpClient NewClient()
         {
             HttpClient c = new HttpClient(Net.NewHandler());
@@ -414,7 +517,11 @@ namespace WbVm
                         PackageInfo p = new PackageInfo();
                         p.Url = dom.GetString("url", "");
                         p.Source = "cn";
-                        if (!string.IsNullOrEmpty(p.Url)) rel.Packages["win32-x64-user"] = p;
+                        if (!string.IsNullOrEmpty(p.Url))
+                        {
+                            p.SizeText = await ProbeSizeAsync(http, p.Url).ConfigureAwait(false);
+                            rel.Packages["win32-x64-user"] = p;
+                        }
                         if (string.IsNullOrEmpty(rel.Build)) rel.Build = dom.GetString("build", "");
                     }
                 }
@@ -438,6 +545,7 @@ namespace WbVm
                             PackageInfo p = new PackageInfo();
                             p.Url = report.IntlUrl;
                             p.Source = "intl";
+                            p.SizeText = await ProbeSizeAsync(http, p.Url).ConfigureAwait(false);
                             rel.IntlPackages["win32-x64-user"] = p;
                             report.IntlNew = RememberIntl(report.IntlVersion, report.IntlUrl);
                         }
@@ -446,6 +554,18 @@ namespace WbVm
                 catch (Exception ex)
                 {
                     report.Warnings.Add("国际版更新通道：" + Describe(ex));
+                }
+
+                // 之前累积的国际版地址没有体积，顺手补上，界面上就不用只显示「官方包」
+                List<Task> probes = new List<Task>();
+                using (SemaphoreSlim gate = new SemaphoreSlim(4))
+                {
+                    foreach (KeyValuePair<string, PackageInfo> kv in IntlHistory)
+                    {
+                        if (string.IsNullOrEmpty(kv.Value.SizeText) && !string.IsNullOrEmpty(kv.Value.Url))
+                            probes.Add(ProbeIntoAsync(http, gate, kv.Value));
+                    }
+                    if (probes.Count > 0) await Task.WhenAll(probes).ConfigureAwait(false);
                 }
 
                 for (int i = 0; i < Releases.Count; i++) merged[Releases[i].Version] = Releases[i];
@@ -553,6 +673,7 @@ namespace WbVm
             all.Sort(delegate(Release a, Release b) { return Fmt.CompareVersion(b.Version, a.Version); });
             Releases = all;
             ApplyIntlHistory();
+            MarkIntlProvenance();
             GeneratedAt = DateTime.UtcNow.ToString("o");
             report.Total = Releases.Count;
 
@@ -583,6 +704,8 @@ namespace WbVm
                     JsonValue p = JsonValue.NewObject();
                     p.Set("url", kv.Value.Url);
                     p.Set("sizeText", kv.Value.SizeText);
+                    p.Set("recorded", true);
+                    if (!string.IsNullOrEmpty(kv.Value.RecordedAt)) p.Set("recordedAt", kv.Value.RecordedAt);
                     history.Set(kv.Key, p);
                 }
                 root.Set("intlHistory", history);
@@ -616,6 +739,11 @@ namespace WbVm
                     JsonValue p = JsonValue.NewObject();
                     p.Set("url", kv.Value.Url);
                     p.Set("sizeText", kv.Value.SizeText);
+                    if (kv.Value.Recorded)
+                    {
+                        p.Set("recorded", true);
+                        if (!string.IsNullOrEmpty(kv.Value.RecordedAt)) p.Set("recordedAt", kv.Value.RecordedAt);
+                    }
                     intlPkgs.Set(kv.Key, p);
                 }
                 r.Set("intlPackages", intlPkgs);
@@ -682,15 +810,24 @@ namespace WbVm
 
                 for (int i = 2; i < cells.Count; i++)
                 {
-                    int keyIndex = i - 2;
-                    if (keyIndex >= PlatformKeys.Length) break;
                     Match link = Regex.Match(cells[i], "href=\"([^\"]+)\"", RegexOptions.IgnoreCase);
                     if (!link.Success) continue;
+                    string url = link.Groups[1].Value;
                     Match size = Regex.Match(StripTags(cells[i]), "([\\d.]+)\\s*(MB|GB|KB)", RegexOptions.IgnoreCase);
                     PackageInfo p = new PackageInfo();
-                    p.Url = link.Groups[1].Value;
+                    p.Url = url;
                     p.SizeText = size.Success ? size.Groups[1].Value + " " + size.Groups[2].Value.ToUpperInvariant() : "";
-                    rel.Packages[PlatformKeys[keyIndex]] = p;
+
+                    // 先按链接里的平台标识归位，认不出来才退回列序。
+                    // 官网表格加一列或留空一个格子时，纯列序会把 Windows 包记到 macOS 名下。
+                    string key = Downloads.PlatformFromName(url);
+                    if (string.IsNullOrEmpty(key))
+                    {
+                        int keyIndex = i - 2;
+                        if (keyIndex >= PlatformKeys.Length) continue;
+                        key = PlatformKeys[keyIndex];
+                    }
+                    rel.Packages[key] = p;
                 }
 
                 if (rel.Packages.Count == 0) continue;

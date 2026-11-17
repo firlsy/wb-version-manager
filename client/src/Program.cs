@@ -97,6 +97,10 @@ namespace WbVm
                             }
                             if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("WBVM_GUIDE_SHOT")))
                                 form.DevShowGuide();
+                            if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("WBVM_EDITION_SHOT")))
+                                form.DevShowEdition();
+                            if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("WBVM_QUEUE_SHOT")))
+                                form.DevShowQueue();
                             using (Bitmap bmp = new Bitmap(form.Width, form.Height))
                             {
                                 form.DrawToBitmap(bmp, new Rectangle(0, 0, form.Width, form.Height));
@@ -237,15 +241,17 @@ namespace WbVm
                     string latest = cat.LatestVersionFor(appId);
                     w.WriteLine("[" + app.Name + " " + app.Edition + "]  最新 " + (latest == "" ? "未知" : latest) +
                                 "  共 " + cat.Releases.Count + " 个版本");
-                    int with = 0, without = 0;
+                    int with = 0, without = 0, recorded = 0;
                     foreach (Release rel in cat.Releases)
                     {
                         PackageInfo p = rel.PackageFor(appId);
                         if (p == null) { without++; continue; }
                         with++;
-                        w.WriteLine("  " + rel.Version.PadRight(9) + p.Url);
+                        bool rec = p.Recorded;
+                        if (rec) recorded++;
+                        w.WriteLine("  " + rel.Version.PadRight(9) + p.Url + (rec ? "   [记录]" : ""));
                     }
-                    w.WriteLine("有官方包 " + with + " 个，无官方包 " + without + " 个。");
+                    w.WriteLine("有包 " + with + " 个（其中工具记录 " + recorded + " 个，非官网同步），无包 " + without + " 个。");
                     return;
                 }
 
@@ -288,7 +294,7 @@ namespace WbVm
                         try
                         {
                             long len = p.Length;
-                            p.Delete();
+                            Downloads.DeletePart(p.FullName);   // 连 .meta 指纹一起删
                             removed++; freed += len;
                             w.WriteLine("  删除 " + p.Name + "  " + Fmt.Bytes(len));
                         }
@@ -313,6 +319,8 @@ namespace WbVm
                 Catalog disk = Catalog.LoadFromFile(cachedFile);
                 if (disk.Releases.Count > 0) cat = disk;
             }
+            // 错版包判断读的是这个 Provider，不接上就会一直用内置快照
+            Downloads.CatalogProvider = delegate { return cat; };
             return cat;
         }
 
@@ -333,7 +341,7 @@ namespace WbVm
             w.WriteLine("[" + app.Name + " " + app.Edition + "]");
             w.WriteLine("  安装目录 : " + (info.Found ? info.InstallDir : "未检测到"));
             w.WriteLine("  当前版本 : " + (info.Found ? info.Version : "-") + (info.Found ? "  (" + info.VersionSource + ")" : ""));
-            w.WriteLine("  锁定状态 : " + (st.Enabled ? "已锁定" : "未锁定") + (string.IsNullOrEmpty(locked) ? "" : "  → " + locked));
+            w.WriteLine("  锁定状态 : " + LockState.Text(st.State) + (string.IsNullOrEmpty(locked) ? "" : "  → " + locked));
             w.WriteLine("  启动开关 : app-config=" + ShowBool(st.Config.ConfigValue) + "  settings=" + ShowBool(st.Config.SettingsValue));
             w.WriteLine("  缓存目录 : " + (st.CacheBlocked ? "已拒绝写入" : "可写") + "  安装包 " + st.Installers.Count + " 个 / " + Fmt.Bytes(st.Total));
             w.WriteLine("  失败记录 : " + (st.Failure.Exists ? (st.Failure.Count + " 次 · " + st.Failure.Code) : "无"));

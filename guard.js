@@ -5,8 +5,9 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { APPS, detectApps } from './lib/detect.js';
-import { loadState, saveState } from './lib/store.js';
-import { findCached } from './lib/downloads.js';
+import { loadState, saveState, sameVersion } from './lib/store.js';
+import { loadCatalog } from './lib/catalog.js';
+import { findCached, buildNameIndex } from './lib/downloads.js';
 import { installVersion } from './lib/install.js';
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
@@ -23,18 +24,20 @@ async function log(line) {
 async function main() {
   const state = await loadState();
   const detected = await detectApps(state.settings.customPaths);
+  // 和网页版同一套错版判定：自动恢复也不能装另一版的包
+  const nameIndex = buildNameIndex(await loadCatalog());
   const events = [];
   for (const app of APPS) {
     const lock = state.locks[app.id];
     if (!lock) continue;
     const info = detected[app.id];
     if (!info?.found) continue;
-    const drift = info.version && info.version !== lock.version;
+    const drift = info.version && !sameVersion(info.version, lock.version);
     events.push({ appId: app.id, locked: lock.version, current: info.version, drift });
     if (!drift) continue;
     await log(`漂移：${app.name} 当前 ${info.version}，锁定 ${lock.version}`);
     if (!FIX) continue;
-    const cached = await findCached(app.id, lock.version);
+    const cached = await findCached(app.id, lock.version, nameIndex);
     if (!cached) {
       await log(`无法恢复：缺少 ${lock.version} 安装包，请在工具内下载后重试`);
       continue;

@@ -2,13 +2,24 @@
 // 运行：node scripts/build-catalog.mjs
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const ROOT = path.resolve(import.meta.dirname, '..');
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const DATA_DIR = path.join(ROOT, 'data');
+const OUT_FILE = path.join(DATA_DIR, 'catalog.json');
 const DOCS = 'https://www.workbuddy.cn/docs/workbuddy';
+const INTL_FEED = 'https://www.workbuddy.ai/v2/update?platform=workbuddy-win32-x64-user';
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0 Safari/537.36';
 
 const PLATFORM_KEYS = ['darwin-arm64', 'darwin-x64', 'win32-x64-user'];
+
+/** 按链接认平台，别依赖表格列序 */
+function platformOfUrl(url) {
+  if (/darwin-arm64/i.test(url)) return 'darwin-arm64';
+  if (/darwin-x64/i.test(url)) return 'darwin-x64';
+  if (/win32-x64-user/i.test(url)) return 'win32-x64-user';
+  return '';
+}
 
 function stripTags(html) {
   return html
@@ -34,6 +45,28 @@ async function get(url) {
   return await res.text();
 }
 
+/** 国际版只发布当前版本，这里取到就记进 intlHistory，别让重建目录把它冲掉 */
+async function fetchLatestIntl() {
+  try {
+    const res = await fetch(`${INTL_FEED}&version=0.0.0`, { headers: { 'User-Agent': 'WorkBuddy/5.11.3' } });
+    if (!res.ok) return null;
+    const text = await res.text();
+    if (!text.trim()) return null;
+    const data = JSON.parse(text);
+    if (!data?.version) return null;
+    return {
+      version: String(data.version).split('.').slice(0, 3).join('.'),
+      build: String(data.version),
+      url: data.url || '',
+      sha256: data.sha256hash || '',
+      publishedAt: data.timestamp ? new Date(data.timestamp * 1000).toISOString() : '',
+    };
+  } catch (err) {
+    console.warn('  国际版通道读取失败：', err.message);
+    return null;
+  }
+}
+
 function parseDownloadHistory(html) {
   const releases = new Map();
   const rows = html.match(/<tr>[\s\S]*?<\/tr>/gi) || [];
@@ -46,18 +79,19 @@ function parseDownloadHistory(html) {
     const date = stripTags(cells[1]).trim();
     const packages = {};
     for (let i = 2; i < cells.length; i++) {
-      const key = PLATFORM_KEYS[i - 2];
-      if (!key) continue;
       const link = cells[i].match(/href="([^"]+)"/i);
       if (!link) continue;
+      const url = link[1];
+      const key = platformOfUrl(url) || PLATFORM_KEYS[i - 2];
+      if (!key) continue;
       const sizeMatch = stripTags(cells[i]).match(/([\d.]+)\s*(MB|GB|KB)/i);
       packages[key] = {
-        url: link[1],
+        url,
         sizeText: sizeMatch ? `${sizeMatch[1]} ${sizeMatch[2].toUpperCase()}` : '',
       };
     }
     if (!Object.keys(packages).length) continue;
-    const buildMatch = Object.values(packages)[0].url.match(/WorkBuddy-[a-z0-9-]+-(\d+\.\d+\.\d+\.\d+)-/i);
+    const buildMatch = Object.values(packages)[0].url.match(/WorkBuddy-[a-z0-9-]+-(\d+(?:\.\d+){2,3})-/i);
     releases.set(version, {
       version,
       build: buildMatch ? buildMatch[1] : '',
@@ -172,23 +206,59 @@ async function main() {
   }
 
   const list = [...releases.values()].sort((a, b) => cmpVersion(b.version, a.version));
+
+  // 重建目录不能把国际版那点家底冲掉：先读回旧文件里的 intlHistory，
+  // 再问一次国际版通道，最后按版本贴回去。
+  console.log('→ 读取国际版更新通道…');
+  let previous = null;
+  try {
+    previous = JSON.parse(await fs.readFile(OUT_FILE, 'utf8'));
+  } catch {}
+  const intlHistory = { ...(previous?.intlHistory || {}) };
+  const intl = await fetchLatestIntl();
+  const stamp = new Date().toISOString().slice(0, 10);
+  // 每条历史都标成「工具记录」：官网只保留最新版，这些地址官网已经不再提供
+  for (const [v, entry] of Object.entries(intlHistory)) {
+    if (!entry || !entry.url) continue;
+    intlHistory[v] = { ...entry, recorded: true, recordedAt: entry.recordedAt || stamp };
+  }
+  if (intl?.url) intlHistory[intl.version] = { url: intl.url, sizeText: '', recorded: true, recordedAt: stamp };
+  const latestIntl = intl || previous?.latestIntl || null;
+
+  for (const rel of list) {
+    const hit = intlHistory[rel.version];
+    if (!hit?.url) continue;
+    rel.intlPackages = {
+      ...(rel.intlPackages || {}),
+      'win32-x64-user': {
+        url: hit.url,
+        sizeText: hit.sizeText || '',
+        recorded: rel.version !== intl?.version,
+        ...(rel.version !== intl?.version ? { recordedAt: hit.recordedAt || stamp } : {}),
+      },
+    };
+  }
+
   const catalog = {
     generatedAt: new Date().toISOString(),
     sources: {
       history: `${DOCS}/Download-History`,
       changelog: `${DOCS}/Changelog`,
       updateFeed: 'https://copilot.tencent.com/v2/update?platform=workbuddy-win32-x64-user',
+      intlUpdateFeed: INTL_FEED,
     },
     latest,
+    latestIntl,
+    intlHistory,
     releases: list,
   };
 
   await fs.mkdir(DATA_DIR, { recursive: true });
-  const out = path.join(DATA_DIR, 'catalog.json');
-  await fs.writeFile(out, JSON.stringify(catalog, null, 2), 'utf8');
+  await fs.writeFile(OUT_FILE, JSON.stringify(catalog, null, 2), 'utf8');
   const withNotes = list.filter((r) => r.notes.length).length;
-  console.log(`\n✓ 已写入 ${out}`);
+  console.log(`\n✓ 已写入 ${OUT_FILE}`);
   console.log(`  版本 ${list.length} 个（含更新说明 ${withNotes} 个），最新 ${latest?.build || '未知'}`);
+  console.log(`  国际版最新 ${latestIntl?.version || '未知'}，累积记录 ${Object.keys(intlHistory).length} 个`);
 }
 
 function cmpVersion(a, b) {

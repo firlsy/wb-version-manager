@@ -4,10 +4,10 @@ import path from 'node:path';
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
-import { ROOT, EXPORT_DIR, ensureDirs, loadState, saveState, formatBytes, seriesOf, cmpVersion } from './lib/store.js';
+import { ROOT, DATA_DIR, STORE_DIR, EXPORT_DIR, ensureDirs, loadState, saveState, formatBytes, seriesOf, cmpVersion, sameVersion } from './lib/store.js';
 import { APPS, appById, detectApps, isRunning } from './lib/detect.js';
 import { loadCatalog, catalogMeta, refreshCatalog, mergeLocalVersions } from './lib/catalog.js';
-import { listCached, startDownload, listJobs, cancelJob, findCached } from './lib/downloads.js';
+import { listCached, startDownload, listJobs, cancelJob, pauseJob, resumeJob, stopJob, removeJob, clearFinishedJobs, clearOrphanParts, findCached, buildNameIndex } from './lib/downloads.js';
 import { installVersion, killApp, dataSnapshot } from './lib/install.js';
 import { setLock, clearLock, guardStatus, setGuard, runGuardNow } from './lib/lock.js';
 import { blockStatus, enableBlock, disableBlock } from './lib/block.js';
@@ -37,15 +37,47 @@ function json(res, code, data) {
   res.end(body);
 }
 
+const MAX_BODY_BYTES = 2 * 1024 * 1024;
+
 async function readBody(req) {
   const chunks = [];
-  for await (const c of req) chunks.push(c);
+  let size = 0;
+  for await (const c of req) {
+    size += c.length;
+    if (size > MAX_BODY_BYTES) {
+      const err = new Error('请求体过大');
+      err.statusCode = 413;
+      throw err;
+    }
+    chunks.push(c);
+  }
   if (!chunks.length) return {};
   try {
     return JSON.parse(Buffer.concat(chunks).toString('utf8'));
   } catch {
     return {};
   }
+}
+
+/** 只允许展示这些目录下的路径；不再用 /WorkBuddy/ 这种宽松匹配 */
+function revealBases() {
+  return [
+    ROOT,
+    STORE_DIR,
+    EXPORT_DIR,
+    DATA_DIR,
+    process.env.ProgramFiles,
+    process.env['ProgramFiles(x86)'],
+    process.env.ProgramW6432,
+    process.env.LOCALAPPDATA ? path.join(process.env.LOCALAPPDATA, 'Programs') : '',
+  ]
+    .filter(Boolean)
+    .map((item) => path.resolve(item).toLowerCase());
+}
+
+function canReveal(target) {
+  const t = path.resolve(target).toLowerCase();
+  return revealBases().some((base) => t === base || t.startsWith(base + path.sep));
 }
 
 async function serveStatic(req, res, pathname) {
@@ -71,8 +103,8 @@ async function buildState() {
   const catalog = await loadCatalog();
   const detected = await detectApps(state.settings.customPaths);
   const jobs = listJobs();
-  const cached = await listCached();
-  const latest = catalog.latest;
+  const nameIndex = nameIndexOf(catalog);
+  const cached = await listCached(nameIndex);
 
   const apps = [];
   for (const app of APPS) {
@@ -80,16 +112,20 @@ async function buildState() {
     const lock = state.locks[app.id] || null;
     const local = [info.version].filter(Boolean);
     const releases = mergeLocalVersions(catalog.releases, local);
+    // 两条通道各自只认自己的最新版，不能拿国内版的版本号去给国际版算「可升级」
+    const latestForApp = app.id === 'workbuddyai' ? catalog.latestIntl : catalog.latest;
     apps.push({
       ...app,
       install: info,
       running: info.found ? await isRunning(app) : false,
       lock,
-      drift: Boolean(lock && info.version && lock.version !== info.version),
-      latest: latest ? { version: latest.version, build: latest.build, publishedAt: latest.publishedAt } : null,
-      upToDate: Boolean(latest && info.version && cmpVersion(info.version, latest.version) >= 0),
+      drift: Boolean(lock && info.version && !sameVersion(lock.version, info.version)),
+      latest: latestForApp
+        ? { version: latestForApp.version, build: latestForApp.build, publishedAt: latestForApp.publishedAt }
+        : null,
+      upToDate: Boolean(latestForApp && info.version && cmpVersion(info.version, latestForApp.version) >= 0),
       releaseCount: releases.length,
-      hasUpdate: Boolean(latest && info.version && cmpVersion(info.version, latest.version) < 0),
+      hasUpdate: Boolean(latestForApp && info.version && cmpVersion(info.version, latestForApp.version) < 0),
     });
   }
 
@@ -125,6 +161,25 @@ function exportText(format, items) {
     return JSON.stringify(items, null, 2);
   }
   return items.map((it) => it.url).join('\r\n');
+}
+
+/* 目录里 (appId, version) 对应的官方安装包地址，找不到返回空 */
+function catalogUrlFor(catalog, appId, version) {
+  for (const rel of catalog.releases || []) {
+    if (!sameVersion(rel.version, version)) continue;
+    const map = appId === 'workbuddyai' ? rel.intlPackages : rel.packages;
+    const pkg = map && map['win32-x64-user'];
+    return pkg && pkg.url ? pkg.url : '';
+  }
+  return '';
+}
+
+/* 名字索引只跟目录内容有关：每次请求重建一遍纯属浪费（轮询 1.2s 一次） */
+let _nameIndex = { key: '', value: null };
+function nameIndexOf(catalog) {
+  const key = `${catalog?.generatedAt || ''}|${catalog?.releases?.length || 0}`;
+  if (_nameIndex.key !== key) _nameIndex = { key, value: buildNameIndex(catalog) };
+  return _nameIndex.value;
 }
 
 /* ---------------- 工具自身的版本与更新检查 ---------------- */
@@ -210,13 +265,19 @@ async function handler(req, res) {
       const info = (await detectApps(state.settings.customPaths))[appId];
       const releases = mergeLocalVersions(catalog.releases, [info?.version].filter(Boolean));
       const lock = state.locks[appId] || null;
-      const cached = await listCached();
+      const cached = await listCached(nameIndexOf(catalog));
       // 国内版与国际版是两套安装包，按当前客户端选对应的那一套，绝不跨版回退
       const latestForApp = appId === 'workbuddyai' ? catalog.latestIntl : catalog.latest;
       const items = releases.map((r) => {
         const pkgs = (appId === 'workbuddyai' ? r.intlPackages : r.packages) || {};
         const win = pkgs['win32-x64-user'];
-        const cache = cached.find((c) => c.appId === appId && (c.versionShort === r.version || c.version === r.version) && c.platform === 'win32-x64-user');
+        const cache = cached.find(
+          (c) =>
+            c.appId === appId &&
+            c.usable &&
+            (c.versionShort === r.version || c.version === r.version) &&
+            c.platform === 'win32-x64-user'
+        );
         return {
           ...r,
           packages: pkgs,
@@ -226,7 +287,9 @@ async function handler(req, res) {
           platformLabels: PLATFORM_LABELS,
           winUrl: win?.url || '',
           winSize: win?.sizeText || '',
-          installed: info?.version === r.version,
+          recorded: Boolean(win?.recorded),
+          recordedAt: win?.recordedAt || '',
+          installed: sameVersion(info?.version, r.version),
           locked: lock?.version === r.version,
           latest: latestForApp?.version === r.version,
           downloaded: Boolean(cache),
@@ -317,31 +380,59 @@ async function handler(req, res) {
     if (p === '/api/download' && req.method === 'POST') {
       const body = await readBody(req);
       if (!appById(body.appId)) return json(res, 400, { error: '未知应用' });
-      const job = await startDownload({ appId: body.appId, version: body.version, url: body.url });
+      if (!body.version) return json(res, 400, { error: '缺少版本号' });
+
+      // 只允许下「目录里这个版本对应的那个地址」：
+      // 否则只要域名在白名单里，就能把任意官方包塞进这个客户端的草稿目录。
+      const catalog = await loadCatalog();
+      const expected = catalogUrlFor(catalog, body.appId, body.version);
+      if (!expected) return json(res, 400, { error: '官方目录里没有这个版本的安装包' });
+      if (String(body.url || '') !== expected) {
+        return json(res, 400, { error: '安装包地址与版本不匹配，请刷新目录后重试' });
+      }
+
+      const job = await startDownload({ appId: body.appId, version: body.version, url: expected });
       return json(res, 200, { ok: true, job });
     }
 
     if (p === '/api/downloads' && req.method === 'GET') {
-      return json(res, 200, { jobs: listJobs(), cached: await listCached() });
+      const catalog = await loadCatalog();
+      return json(res, 200, { jobs: listJobs(), cached: await listCached(nameIndexOf(catalog)) });
     }
 
-    if (p.startsWith('/api/download/') && p.endsWith('/cancel') && req.method === 'POST') {
-      const id = decodeURIComponent(p.split('/')[3] || '');
-      return json(res, 200, { ok: cancelJob(id) });
+    // 队列操作：暂停 / 继续 / 停止 / 删除（cancel 保留给老前端）
+    const dlAction = /^\/api\/download\/(.+)\/(pause|resume|stop|cancel|remove)$/.exec(p);
+    if (dlAction && req.method === 'POST') {
+      const id = decodeURIComponent(dlAction[1]);
+      const action = dlAction[2];
+      let ok = false;
+      if (action === 'pause') ok = pauseJob(id);
+      else if (action === 'resume') ok = resumeJob(id);
+      else if (action === 'remove') ok = await removeJob(id);
+      else ok = await stopJob(id);
+      return json(res, 200, { ok, jobs: listJobs() });
+    }
+
+    if (p === '/api/downloads/clear' && req.method === 'POST') {
+      return json(res, 200, { ok: true, cleared: await clearFinishedJobs(), jobs: listJobs() });
+    }
+
+    if (p === '/api/downloads/parts/clear' && req.method === 'POST') {
+      const r = await clearOrphanParts();
+      return json(res, 200, { ok: true, ...r });
     }
 
     if (p === '/api/install' && req.method === 'POST') {
       const body = await readBody(req);
       if (!appById(body.appId)) return json(res, 400, { error: '未知应用' });
-      let cached = await findCached(body.appId, body.version);
-      if (!cached && body.path) {
-        const st = await fs.stat(body.path).catch(() => null);
-        if (st) cached = { path: body.path };
-      }
-      if (!cached) return json(res, 400, { error: '本地没有该版本的安装包，请先下载' });
+      if (!body.version) return json(res, 400, { error: '缺少版本号' });
       const catalog = await loadCatalog();
+      // 只认缓存里、且归属正确的包。不接受客户端指定任意路径，
+      // 否则可以把另一版的安装包塞进来静默安装。
+      const cached = await findCached(body.appId, body.version, nameIndexOf(catalog));
+      if (!cached) return json(res, 400, { error: '本地没有该版本可用的安装包，请先下载' });
       const latestForApp = body.appId === 'workbuddyai' ? catalog.latestIntl : catalog.latest;
-      const sha256 = latestForApp?.version === body.version ? (latestForApp.sha256 || '') : '';
+      const sha256 = sameVersion(latestForApp?.version, body.version) ? latestForApp.sha256 || '' : '';
       const result = await installVersion({
         appId: body.appId,
         version: body.version,
@@ -383,7 +474,8 @@ async function handler(req, res) {
       const format = body.format || 'txt';
       const text = exportText(format, items);
       const ext = format === 'markdown' ? 'md' : format === 'json' ? 'json' : format;
-      const filename = body.filename || `wb-packages-${Date.now()}.${ext}`;
+      // 只取文件名，别让 ../ 把导出写到 exports 外面
+      const filename = path.basename(String(body.filename || `wb-packages-${Date.now()}.${ext}`));
       await fs.mkdir(EXPORT_DIR, { recursive: true });
       const file = path.join(EXPORT_DIR, filename);
       await fs.writeFile(file, text, 'utf8');
@@ -393,8 +485,7 @@ async function handler(req, res) {
     if (p === '/api/reveal' && req.method === 'POST') {
       const body = await readBody(req);
       const target = body.path ? path.resolve(body.path) : ROOT;
-      const allowed = target.startsWith(ROOT) || target.startsWith(process.env.ProgramFiles || '\0') || /WorkBuddy/i.test(target);
-      if (!allowed) return json(res, 400, { error: '路径不在允许范围' });
+      if (!canReveal(target)) return json(res, 400, { error: '路径不在允许范围' });
       const st = await fs.stat(target).catch(() => null);
       if (!st) return json(res, 404, { error: '路径不存在' });
       spawn('explorer.exe', [st.isDirectory() ? target : `/select,${target}`], { detached: true, stdio: 'ignore' }).unref();
@@ -412,8 +503,8 @@ async function handler(req, res) {
 
     return await serveStatic(req, res, p);
   } catch (err) {
-    console.error('[api]', p, err);
-    return json(res, 500, { error: err.message || String(err) });
+    if (!err.statusCode || err.statusCode >= 500) console.error('[api]', p, err);
+    return json(res, err.statusCode || 500, { error: err.message || String(err) });
   }
 }
 
@@ -443,6 +534,15 @@ async function main() {
   if (!server) throw new Error('端口被占用，无法启动');
   const url = `http://${HOST}:${port}`;
   console.log(`\n  WB 版本管理器 已启动\n  ${url}\n  按 Ctrl+C 停止\n`);
+
+  // 预热：先把安装目录和进程状态探一遍，首屏 /api/state 就不用等 tasklist
+  (async () => {
+    try {
+      const st = await loadState();
+      await detectApps(st.settings.customPaths);
+      await Promise.all(APPS.map((a) => isRunning(a)));
+    } catch {}
+  })();
   if (!NO_OPEN) {
     spawn('cmd', ['/c', 'start', '', url], { detached: true, stdio: 'ignore', windowsHide: true }).unref();
   }

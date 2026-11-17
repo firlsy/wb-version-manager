@@ -53,9 +53,11 @@ namespace WbVm
         private Label _cacheLabel;
         private FlatButton _openStoreBtn;
         private FlatButton _clearCacheBtn;
+        private CardPanel _guideCard;
+        private FlatButton _guideMore;
+        private Panel _guideLeft;
 
-        private Label _appTitle;
-        private Label _appSub;
+        private Label _appTitle;        private Label _appSub;
         private Badge _lockBadge;
         private Badge _cacheBadge;
         private Badge _runBadge;
@@ -81,7 +83,7 @@ namespace WbVm
             _catalog = Catalog.Current;
             BuildUi();
             Load += delegate { TryLoadDiskCatalog(); };
-            Shown += async delegate { await ReloadAll(true); };
+            Shown += async delegate { FitGuideCard(); await ReloadAll(true); };
 
             // 运行状态是外部事实，界面上自己刷一下，不然开了客户端还显示「未运行」
             _runTimer = new System.Windows.Forms.Timer();
@@ -259,6 +261,54 @@ namespace WbVm
             _clearCacheBtn.Danger = true;
             _clearCacheBtn.Click += delegate { ClearUselessCache(); };
             cacheCard.Controls.Add(_clearCacheBtn);
+
+            /* 左下：回退步骤 */
+            CardPanel guideCard = new CardPanel();
+            guideCard.Location = new Point(0, y + 162);
+            guideCard.Size = new Size(LeftWidth - 12, 218);
+            guideCard.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            left.Controls.Add(guideCard);
+            _guideCard = guideCard;
+
+            Label gTitle = new Label();
+            gTitle.Text = "从新版本回退到旧版本";
+            gTitle.Font = UiFont.H3;
+            gTitle.ForeColor = Palette.Text;
+            gTitle.AutoSize = true;
+            gTitle.BackColor = Color.Transparent;
+            gTitle.Location = new Point(16, 12);
+            guideCard.Controls.Add(gTitle);
+
+            Label gBody = new Label();
+            gBody.Font = UiFont.Small;
+            gBody.ForeColor = Palette.Text2;
+            gBody.BackColor = Color.Transparent;
+            gBody.Location = new Point(16, 38);
+            gBody.Size = new Size(278, 100);
+            gBody.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            gBody.Text = BuildGuideText();
+            guideCard.Controls.Add(gBody);
+
+            Label gNote = new Label();
+            gNote.Font = UiFont.Small;
+            gNote.ForeColor = Palette.Muted;
+            gNote.BackColor = Color.Transparent;
+            gNote.Location = new Point(16, 140);
+            gNote.Size = new Size(278, 18);
+            gNote.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            gNote.Text = "· 数据在工作区目录，回退不会动。";
+            guideCard.Controls.Add(gNote);
+
+            FlatButton gMore = new FlatButton();
+            gMore.Text = "完整说明";
+            gMore.Size = new Size(88, 26);
+            gMore.Location = new Point(16, 184);
+            gMore.Anchor = AnchorStyles.Left | AnchorStyles.Bottom;
+            gMore.Click += delegate { ShowGuideDialog(); };
+            guideCard.Controls.Add(gMore);
+            _guideMore = gMore;
+            _guideLeft = left;
+            left.Resize += delegate { FitGuideCard(); };
 
             /* ---------- 右侧 ---------- */
 
@@ -628,6 +678,145 @@ namespace WbVm
             _refreshBtn.Enabled = !_busy;
         }
 
+        /// <summary>回退步骤卡片撑满左栏剩余高度，按钮贴底</summary>
+        private void FitGuideCard()
+        {
+            if (_guideCard == null || _guideLeft == null) return;
+            int h = _guideLeft.ClientSize.Height - _guideCard.Top - 12;
+            if (h < 150) h = 150;
+            _guideCard.Height = h;
+            if (_guideMore != null) _guideMore.Top = h - 34;
+        }
+
+        private static string BuildGuideText()
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.Append("1  左侧点选要回退的客户端\n");
+            sb.Append("2  点「解除锁定」放开版本\n");
+            sb.Append("3  版本清单里选中目标旧版本\n");
+            sb.Append("4  点「下载选中版本」等下载完成\n");
+            sb.Append("5  点「回退安装」，UAC 点「是」\n");
+            sb.Append("6  装完自动重开，再点「锁定当前版本」\n");
+            return sb.ToString();
+        }
+
+        private static string BuildGuideDetail()
+        {
+            StringBuilder sb = new StringBuilder();
+            sb.AppendLine("回退前先确认两件事");
+            sb.AppendLine();
+            sb.AppendLine("· 数据不会丢。工作区、任务、历史会话、技能、资料库都放在");
+            sb.AppendLine("  %USERPROFILE%\\.workbuddy 和 %LOCALAPPDATA% 下面，跟客户端版本无关，");
+            sb.AppendLine("  回退只是把程序目录换回旧版本，不会碰这些数据。");
+            sb.AppendLine("· 回退会改动安装目录（通常是 D:\\Program Files\\WorkBuddy 或");
+            sb.AppendLine("  D:\\Program Files\\WorkBuddyAI），需要管理员权限，会弹 UAC。");
+            sb.AppendLine();
+            sb.AppendLine("步骤");
+            sb.AppendLine();
+            sb.AppendLine("1. 在左侧点选要回退的客户端：WorkBuddy 国内版 或 WorkBuddy AI 国际版。");
+            sb.AppendLine("   两款互不影响，一次只处理一个。");
+            sb.AppendLine();
+            sb.AppendLine("2. 点「解除锁定」。这一步会把启动强制更新开关还原、把缓存目录恢复可写，");
+            sb.AppendLine("   否则安装器可能写不进去。");
+            sb.AppendLine();
+            sb.AppendLine("3. 在中间的版本清单里找到目标旧版本。看「本机」这一列：");
+            sb.AppendLine("   标「当前版本」的是现在装着的，标「已缓存」的说明安装包已经在本地。");
+            sb.AppendLine();
+            sb.AppendLine("4. 点「下载选中版本」。已经缓存过的会直接复用，不会重复下载。");
+            sb.AppendLine("   下载带进度和速度，中断了会留 .part 文件，下次重新下即可。");
+            sb.AppendLine();
+            sb.AppendLine("5. 点「回退安装」。确认框里核对「从 x → y」的版本号，没问题再点确定。");
+            sb.AppendLine("   工具会先校验安装包的 SHA-256，对不上会中止，不会装半个包。");
+            sb.AppendLine();
+            sb.AppendLine("6. UAC 弹窗点「是」。安装器用的是官方 NSIS 静默参数：");
+            sb.AppendLine("   /S --updated /UPDATE=1 /D=<原安装目录>");
+            sb.AppendLine("   也就是原地覆盖，不换目录、不新建配置。");
+            sb.AppendLine();
+            sb.AppendLine("7. 等进度跑完。工具会自动关掉正在运行的客户端，安装完再把它拉起来；");
+            sb.AppendLine("   装完最多等 60 秒，工具会重新读一次版本号确认已经变了。");
+            sb.AppendLine();
+            sb.AppendLine("8. 回到工具点「锁定当前版本」。这一步别省：不锁定的话，客户端下次启动");
+            sb.AppendLine("   还会自己检查更新，过几天又被顶到新版本。");
+            sb.AppendLine();
+            sb.AppendLine("没成功怎么办");
+            sb.AppendLine();
+            sb.AppendLine("· 提示 SHA-256 不一致：安装包下坏了。用缓存卡片的「清除无用缓存」清掉，");
+            sb.AppendLine("  再重新下载。");
+            sb.AppendLine("· 安装器报错退出：多半是目标目录被占用。先手动退出客户端，再试一次；");
+            sb.AppendLine("  也可以点「打开缓存目录」找到安装包，双击手动安装。");
+            sb.AppendLine("· 回退成功但还是提示更新：说明没锁定，重复第 8 步。");
+            sb.AppendLine("· 想省事也可以用命令行：");
+            sb.AppendLine("    WorkBuddyVersionManager.exe --unlock workbuddy");
+            sb.AppendLine("    WorkBuddyVersionManager.exe --lock workbuddy");
+            return sb.ToString();
+        }
+
+        private void ShowGuideDialog()
+        {
+            Form f = new Form();
+            f.Text = "从新版本回退到旧版本 · 完整说明";
+            f.StartPosition = FormStartPosition.CenterParent;
+            f.FormBorderStyle = FormBorderStyle.FixedDialog;
+            f.MaximizeBox = false;
+            f.MinimizeBox = false;
+            f.ShowInTaskbar = false;
+            f.ClientSize = new Size(620, 540);
+            f.BackColor = Palette.Bg;
+            f.Font = UiFont.Base;
+
+            Panel bar = new Panel();
+            bar.Dock = DockStyle.Bottom;
+            bar.Height = 48;
+            bar.BackColor = Palette.Bg;
+            f.Controls.Add(bar);
+
+            Panel host = new Panel();
+            host.Dock = DockStyle.Fill;
+            host.Padding = new Padding(14);
+            host.BackColor = Color.White;
+            f.Controls.Add(host);
+            host.BringToFront();
+
+            TextBox tb = new TextBox();
+            tb.Multiline = true;
+            tb.ReadOnly = true;
+            tb.ScrollBars = ScrollBars.Vertical;
+            tb.BorderStyle = BorderStyle.None;
+            tb.BackColor = Color.White;
+            tb.ForeColor = Palette.Text;
+            tb.Font = UiFont.Small;
+            tb.Dock = DockStyle.Fill;
+            tb.Text = BuildGuideDetail();
+            tb.Select(0, 0);
+            host.Controls.Add(tb);
+
+            FlatButton ok = new FlatButton();
+            ok.Text = "知道了";
+            ok.Size = new Size(96, 32);
+            ok.Primary = true;
+            ok.Location = new Point(f.ClientSize.Width - 96 - 16, 8);
+            ok.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+            ok.Click += delegate { f.Close(); };
+            bar.Controls.Add(ok);
+
+            // 开发用：把说明窗口渲染成图片后退出
+            string shot = Environment.GetEnvironmentVariable("WBVM_GUIDE_SHOT");
+            if (!string.IsNullOrEmpty(shot))
+            {
+                f.Show();
+                Application.DoEvents();
+                using (Bitmap bmp = new Bitmap(f.Width, f.Height))
+                {
+                    f.DrawToBitmap(bmp, new Rectangle(0, 0, f.Width, f.Height));
+                    bmp.Save(shot, System.Drawing.Imaging.ImageFormat.Png);
+                }
+                f.Close();
+                return;
+            }
+
+            f.ShowDialog(this);
+        }
+
         private void RefreshCacheSummary()
         {
             AppDef app = Apps.ById(_selectedApp);
@@ -783,6 +972,12 @@ namespace WbVm
         public void DevSelect(string appId)
         {
             if (Apps.ById(appId) != null) SelectApp(appId);
+        }
+
+        /// <summary>开发用：截图时打开回退说明窗口</summary>
+        public void DevShowGuide()
+        {
+            ShowGuideDialog();
         }
 
         /// <summary>只刷「运行中 / 未运行」这一枚徽章，5 秒一次</summary>

@@ -22,10 +22,12 @@ WorkBuddy 桌面端会在后台把完整安装包下载到用户目录，下次�
 
 | 文件 | 说明 |
 | --- | --- |
-| `WorkBuddyVersionManager.exe` | **C# 桌面客户端**，单文件 226 KB，双击即用，不需要安装任何运行时 |
-| `wb-version-manager-v1.2.0.zip` | 网页版便携包，解压后双击 `启动工具.bat`（需要 Node.js 20+） |
-| `wb-vers-manager-v1.2.0.ps1` | 独立 PowerShell CLI，单文件，不需要 Node.js |
+| `WorkBuddyVersionManager-arm64.exe` | **C# 桌面客户端 · 64 位**，单文件 238 KB，双击即用，不需要装任何运行时。AnyCPU 构建：Windows on ARM 上原生 JIT 成 ARM64，x64 上以 64 位运行 |
+| `WorkBuddyVersionManager-x86.exe` | **C# 桌面客户端 · 32 位**，功能完全一致，给 32 位系统或需要强制 32 位进程的场景；在 x64 / ARM64 上通过兼容层运行 |
+| `wb-version-manager-v1.2.0.zip` | 网页版便携包（含 C# 客户端源码与构建脚本），解压后双击 `启动工具.bat`（需要 Node.js 20+） |
 | `SHA256SUMS.txt` | 上面三个文件的校验值 |
+
+> 两个 exe 是同一份源码编译出来的，只有 `/platform` 不同。拿不准就用 `arm64` 那个。
 
 ![主界面](docs/screenshot-main.png)
 
@@ -40,6 +42,7 @@ WorkBuddy 桌面端会在后台把完整安装包下载到用户目录，下次�
 - **下载指定版本**：直接从官方 CDN 下载 Windows 安装包，带进度、速度与断点文件清理。
 - **导出 / 复制链接**：单条复制（三个平台），或导出全部版本的 TXT 清单；网页版还支持 CSV / Markdown / JSON。
 - **清理无用缓存**：缓存卡片按客户端分别显示、分别清理，只删掉既不是当前版本也不是锁定版本的安装包；另一个客户端完全不受影响。
+- **回退步骤内置**：左下角常驻六步速查，点「完整说明」有详细版——数据在哪、SHA-256 怎么校验、装失败了怎么办。
 - **回退**：用官方 NSIS 静默参数安装任意历史版本；工作区、任务、技能、资料库数据不受影响。
 - **版本漂移提示**：锁定后若被其他方式升级，顶部会提示「锁定 x，当前 y」，可一键回退。
 - **可选后台守护**：注册计划任务，每 30 分钟检查一次版本漂移。
@@ -53,20 +56,21 @@ WorkBuddy 桌面端会在后台把完整安装包下载到用户目录，下次�
 要求：Windows 10/11。**不需要**安装 .NET 运行时或 Node.js——用的是系统自带的 .NET Framework 4.8。
 
 ```text
-双击  WorkBuddyVersionManager.exe
+双击  WorkBuddyVersionManager-arm64.exe   （64 位，含 Windows on ARM）
+双击  WorkBuddyVersionManager-x86.exe     （32 位系统或强制 32 位进程时用）
 ```
 
-界面分三块：左侧两张客户端卡片（版本 / 锁定状态 / 一键锁定）、中间版本清单、下方官方更新说明与运行日志。
+界面分三块：左侧两张客户端卡片（版本 / 锁定状态 / 一键锁定）、中间版本清单、下方官方更新说明与运行日志；左下角是回退步骤速查，点「完整说明」看详细版。
 
 ![C# 客户端](docs/screenshot-client.png)
 
 也支持命令行，方便脚本化：
 
 ```powershell
-.\WorkBuddyVersionManager.exe --status                # 查看两款客户端的版本与拦截状态
-.\WorkBuddyVersionManager.exe --lock workbuddy        # 锁定（workbuddy | workbuddyai）
-.\WorkBuddyVersionManager.exe --unlock workbuddy
-.\WorkBuddyVersionManager.exe --clear-cache workbuddy # 只清国内版的无用安装包缓存
+.\WorkBuddyVersionManager-arm64.exe --status                # 查看两款客户端的版本与拦截状态
+.\WorkBuddyVersionManager-arm64.exe --lock workbuddy        # 锁定（workbuddy | workbuddyai）
+.\WorkBuddyVersionManager-arm64.exe --unlock workbuddy
+.\WorkBuddyVersionManager-arm64.exe --clear-cache workbuddy # 只清国内版的无用安装包缓存
 ```
 
 ### 网页版
@@ -156,9 +160,9 @@ installer.exe /S --updated /UPDATE=1 /D=<安装目录>
 
 | 入口 | 依赖 | 适合 |
 | --- | --- | --- |
-| `WorkBuddyVersionManager.exe` | 无（.NET Framework 4.8 系统自带） | 日常使用，图形界面 + 命令行 |
+| `WorkBuddyVersionManager-arm64.exe` / `-x86.exe` | 无（.NET Framework 4.8 系统自带） | 日常使用，图形界面 + 命令行 |
 | `启动工具.bat` / `node server.js` | Node.js 20+ | 想直接看前端实现、改样式、远程调试 |
-| `wb-vers-manager.ps1` | 无（Windows PowerShell 5.1） | 只在终端里做锁定/解除，不装任何东西 |
+| `wb-vers-manager.ps1`（仓库内，不随 Release 发布） | 无（Windows PowerShell 5.1） | 克隆仓库后只想在终端里做锁定/解除 |
 
 ```powershell
 .\wb-vers-manager.ps1 status   # 查看版本、待安装更新、拦截状态
@@ -215,7 +219,9 @@ cd client
 .\build.bat
 ```
 
-产物在 `dist\WorkBuddyVersionManager.exe`。构建脚本调用 `%WINDIR%\Microsoft.NET\Framework64\v4.0.30319\csc.exe`，并把 `data/catalog.json` 作为资源嵌进去，所以 exe 拷到任何地方都能离线看版本清单。
+产物在 `dist\WorkBuddyVersionManager-arm64.exe` 与 `dist\WorkBuddyVersionManager-x86.exe`：同一份源码编译两遍，只有 `/platform` 不同（`anycpu` 与 `x86`）。构建脚本调用 `%WINDIR%\Microsoft.NET\Framework64\v4.0.30319\csc.exe`，并把 `data/catalog.json` 作为资源嵌进去，所以 exe 拷到任何地方都能离线看版本清单。
+
+> 旧版编译器（.NET Framework 4.8 自带）不认识 `/platform:arm64`，所以 ARM 版用 `anycpu`：PE 里不带架构绑定，Windows on ARM 上由 CLR 直接 JIT 成 ARM64 本机代码，效果等同原生。
 
 
 ## 常见问题
@@ -249,9 +255,12 @@ cd client
 ## 更新记录
 
 **v1.2.0**
+- 左下角新增「从新版本回退到旧版本」步骤卡片：六步走完，旁边一个「完整说明」按钮打开详细版（含数据是否受影响、SHA-256 校验、失败怎么处理）。
 - 缓存卡片新增「清除无用缓存」：只删既不是**当前安装版本**也不是**锁定版本**的安装包，连同未完成的 `.part` 碎片；点之前会列出将删除的文件与可释放空间。
 - 缓存按客户端分开：卡片标题显示当前选中的是哪一版，按钮只清这一版的目录，另一个客户端一个字节都不动。命令行对应 `--clear-cache workbuddy | workbuddyai`。
 - 「打开缓存目录」现在直接打开当前客户端缓存包所在目录；和网页版放在同一目录时（发行包就是这种结构），两边的缓存会一起统计。
+- 客户端按架构出两个构建：`-arm64.exe`（AnyCPU，Windows on ARM 原生运行）与 `-x86.exe`（32 位）。`build.bat` 一次编出两个。
+- Release 不再提供 `.ps1` 脚本；便携包里也去掉了，命令行能力已经由 exe 的 `--status / --lock / --unlock / --clear-cache` 覆盖。
 
 **v1.1.1**
 - 修复切换客户端后顶部徽章不刷新：`Badge` / `FlatButton` 是自绘控件，`Text` 变化时不会自动重绘，导致选中 WorkBuddy AI 后仍显示国内版的「已锁定 5.9.3 / 更新缓存 空 / 未运行」。现在文字一变就重绘。

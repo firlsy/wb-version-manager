@@ -95,6 +95,8 @@ namespace WbVm
                                 form.DevSelect(sel);
                                 Application.DoEvents();
                             }
+                            if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("WBVM_GUIDE_SHOT")))
+                                form.DevShowGuide();
                             using (Bitmap bmp = new Bitmap(form.Width, form.Height))
                             {
                                 form.DrawToBitmap(bmp, new Rectangle(0, 0, form.Width, form.Height));
